@@ -1,6 +1,6 @@
 {
   "name": "@atomize-hq/figma-token-rail",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Publish a DTCG token artifact into Figma variables, and check a Figma file for drift against it. Repo is canonical; Figma is downstream.",
   "license": "MIT",
   "type": "module",
