@@ -22,5 +22,5 @@ jobs:
       - run: pnpm build
       - name: Built ESM loads under Node (catches missing .js specifiers)
         run: pnpm smoke
-      - name: Plugin builds from the example config
-        run: node plugin/build.mjs --config figma-token-rail.config.example.json --out /tmp/plugin
+      - name: Plugin builds from the published tarball, not just the repo
+        run: pnpm pack-check
