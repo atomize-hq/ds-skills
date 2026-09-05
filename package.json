@@ -11,7 +11,8 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./plugin/*": "./plugin/*"
+    "./plugin/*": "./plugin/*",
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
@@ -27,8 +28,9 @@
     "test:watch": "vitest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "pnpm format:check && pnpm typecheck && pnpm test",
-    "prepare": "pnpm build"
+    "check": "pnpm format:check && pnpm typecheck && pnpm test && pnpm build && pnpm smoke",
+    "prepare": "pnpm build",
+    "smoke": "node --input-type=module -e \"import('./dist/index.js').then(m=>{if(typeof m.flattenTokenDocument!=='function'||typeof m.syncVariablesViaRest!=='function')throw new Error('built package does not expose its API');console.log('smoke ok')})\""
   },
   "devDependencies": {
     "@figma/plugin-typings": "^1.112.0",

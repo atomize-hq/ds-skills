@@ -18,8 +18,8 @@
  * here. This module performs a sync and reports what happened; recording that
  * outcome is the consuming repo's business.
  */
-import { flattenTokenDocument, type TokenLeaf } from "../token-mapping";
-import { valuesEqual } from "../drift";
+import { flattenTokenDocument, type TokenLeaf } from "../token-mapping.js";
+import { valuesEqual } from "../drift.js";
 
 export type SyncPhase = "auth" | "write" | "verification";
 

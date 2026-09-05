@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import artifact from "./__fixtures__/artifact.json" with { type: "json" };
-import { flattenTokenDocument } from "./token-mapping";
+import { flattenTokenDocument } from "./token-mapping.js";
 
 describe("flattenTokenDocument", () => {
   it("produces a deterministic sorted leaf list from a token artifact", () => {

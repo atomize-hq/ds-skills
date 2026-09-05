@@ -11,7 +11,7 @@ export {
   resolveConfig,
   type PartialRailConfig,
   type RailConfig,
-} from "./config";
+} from "./config.js";
 
 export {
   flattenTokenDocument,
@@ -20,7 +20,7 @@ export {
   type FigmaValue,
   type TokenLeaf,
   type TokenLeafType,
-} from "./token-mapping";
+} from "./token-mapping.js";
 
 export {
   buildExpectedVariables,
@@ -38,7 +38,7 @@ export {
   type ObservedCollection,
   type ObservedVariable,
   type ThemeResolution,
-} from "./drift";
+} from "./drift.js";
 
 export {
   createSyncPlan,
@@ -54,4 +54,4 @@ export {
   type SyncPhase,
   type SyncPlan,
   type SyncVerification,
-} from "./rails/rest-variables";
+} from "./rails/rest-variables.js";

@@ -7,8 +7,8 @@ import {
   type ExpectedVariableSet,
   type ObservedCollection,
   type ObservedVariable,
-} from "../src/drift";
-import type { RailConfig } from "../src/config";
+} from "../src/drift.js";
+import type { RailConfig } from "../src/config.js";
 
 declare const __html__: string;
 /** Injected by plugin/build.mjs from the consuming repo's config file. */

@@ -14,12 +14,12 @@
  * so the two can never diverge.
  */
 
-import { defaultConfig, type RailConfig } from "./config";
+import { defaultConfig, type RailConfig } from "./config.js";
 import {
   flattenTokenDocument,
   type FigmaResolvedType,
   type FigmaValue,
-} from "./token-mapping";
+} from "./token-mapping.js";
 
 /** Kept as a named export for consumers that pinned to it. */
 export const fallbackThemeId = defaultConfig.fallbackThemeId;

@@ -8,7 +8,7 @@ import {
   readDefaultThemeId,
   valuesEqual,
   type ObservedCollection,
-} from "./drift";
+} from "./drift.js";
 
 function loadArtifact(): unknown {
   // Structuredly identical to a real published artifact: a default theme in the

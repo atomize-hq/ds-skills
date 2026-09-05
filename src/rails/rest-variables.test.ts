@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import artifact from "../__fixtures__/artifact.json" with { type: "json" };
-import { flattenTokenDocument } from "../token-mapping";
+import { flattenTokenDocument } from "../token-mapping.js";
 import {
   createSyncPlan,
   FigmaVariablesSyncError,
@@ -8,7 +8,7 @@ import {
   resolveAccessToken,
   syncVariablesViaRest,
   verifySyncOutcome,
-} from "./rest-variables";
+} from "./rest-variables.js";
 
 const collectionName = "Design Tokens";
 const modeName = "Base";
