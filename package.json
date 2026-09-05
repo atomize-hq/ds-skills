@@ -1,6 +1,6 @@
 {
   "name": "@atomize-hq/figma-token-rail",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Publish a DTCG token artifact into Figma variables, and check a Figma file for drift against it. Repo is canonical; Figma is downstream.",
   "license": "MIT",
   "type": "module",
@@ -34,12 +34,18 @@
     "smoke": "node --input-type=module -e \"import('./dist/index.js').then(m=>{if(typeof m.flattenTokenDocument!=='function'||typeof m.syncVariablesViaRest!=='function')throw new Error('built package does not expose its API');console.log('smoke ok')})\"",
     "pack-check": "bash scripts/pack-check.sh"
   },
-  "dependencies": {
-    "esbuild": "^0.25.9"
+  "peerDependencies": {
+    "esbuild": ">=0.20.0"
+  },
+  "peerDependenciesMeta": {
+    "esbuild": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@figma/plugin-typings": "^1.112.0",
     "@types/node": "^25.5.0",
+    "esbuild": "^0.25.9",
     "prettier": "3.8.1",
     "typescript": "^5.9.3",
     "vitest": "4.1.0"

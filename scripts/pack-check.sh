@@ -12,7 +12,7 @@ tarball="$(ls "$work"/*.tgz)"
 mkdir -p "$work/consumer"
 cd "$work/consumer"
 echo '{"name":"consumer","private":true,"type":"module"}' > package.json
-pnpm add "$tarball" --silent >/dev/null
+pnpm add "$tarball" esbuild --silent >/dev/null
 
 cp "$OLDPWD/figma-token-rail.config.example.json" ./config.json
 node node_modules/@atomize-hq/figma-token-rail/plugin/build.mjs \
