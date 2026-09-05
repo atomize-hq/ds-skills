@@ -1,0 +1,4 @@
+dist/
+plugin/code.js
+plugin/code.js.map
+plugin/manifest.json

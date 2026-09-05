@@ -1,0 +1,13 @@
+{
+  "name": "__RAIL_PLUGIN_NAME__",
+  "id": "__RAIL_PLUGIN_ID__",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "networkAccess": {
+    "allowedDomains": ["none"],
+    "reasoning": "Fetch the repo-generated token artifact from the local proof server during development.",
+    "devAllowedDomains": ["__RAIL_ARTIFACT_ORIGIN__"]
+  },
+  "editorType": ["figma"]
+}

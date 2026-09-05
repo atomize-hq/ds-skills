@@ -1,0 +1,6 @@
+node_modules/
+dist/
+plugin/code.js
+plugin/code.js.map
+plugin/manifest.json
+.DS_Store

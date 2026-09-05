@@ -1,0 +1,41 @@
+{
+  "name": "@atomize-hq/figma-token-rail",
+  "version": "0.1.0",
+  "description": "Publish a DTCG token artifact into Figma variables, and check a Figma file for drift against it. Repo is canonical; Figma is downstream.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./plugin/*": "./plugin/*"
+  },
+  "files": [
+    "dist",
+    "plugin",
+    "README.md"
+  ],
+  "packageManager": "pnpm@10.11.1",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "build:plugin": "node plugin/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "pnpm format:check && pnpm typecheck && pnpm test",
+    "prepare": "pnpm build"
+  },
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.112.0",
+    "@types/node": "^25.5.0",
+    "esbuild": "^0.25.9",
+    "prettier": "3.8.1",
+    "typescript": "^5.9.3",
+    "vitest": "4.1.0"
+  }
+}

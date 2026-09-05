@@ -1,0 +1,30 @@
+{
+  "$extensions": {
+    "com.example.tokens": { "source": "repo", "themeId": "dark" }
+  },
+  "$themeOverrides": {
+    "light": {
+      "accent": { "primary": { "$type": "color", "$value": "#1d4ed8" } },
+      "core": { "bg": { "$type": "color", "$value": "#ffffffff" } },
+      "opacity": { "muted": { "$type": "number", "$value": 0.6 } }
+    }
+  },
+  "accent": {
+    "primary": { "$type": "color", "$value": "#155dfc" },
+    "primary-foreground": { "$type": "color", "$value": "#eff6ff" }
+  },
+  "core": {
+    "bg": { "$type": "color", "$value": "#0a0a0aff" },
+    "fg": { "$type": "color", "$value": "rgb(237, 237, 237)" },
+    "muted": { "$type": "color", "$value": "rgba(120, 120, 128, 0.36)" }
+  },
+  "flags": { "dense": { "$type": "boolean", "$value": false } },
+  "layout": { "gutter": { "$type": "dimension", "$value": "16px" } },
+  "motion": { "fast": { "$type": "duration", "$value": "120ms" } },
+  "opacity": { "muted": { "$type": "number", "$value": 0.7 } },
+  "radius": { "md": { "$type": "dimension", "$value": "8px" } },
+  "type": {
+    "family": { "sans": { "$type": "string", "$value": "Inter" } },
+    "weight": { "bold": { "$type": "number", "$value": 700 } }
+  }
+}

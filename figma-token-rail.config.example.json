@@ -1,0 +1,10 @@
+{
+  "collectionName": "Design Tokens",
+  "artifactUrl": "http://localhost:4173/tokens.json",
+  "extensionsNamespace": "com.example.tokens",
+  "fallbackThemeId": "light",
+  "plugin": {
+    "name": "Design Token Sync",
+    "id": "design-token-sync-dev"
+  }
+}

@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>__RAIL_PLUGIN_NAME__</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #ffffff;
+        --fg: #111827;
+        --muted: #6b7280;
+        --border: #e5e7eb;
+        --danger: #b91c1c;
+        --ok: #047857;
+        --btn: #111827;
+        --btnFg: #ffffff;
+        --btnDisabled: #9ca3af;
+        --mono:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+      }
+
+      body {
+        margin: 0;
+        padding: 12px;
+        font:
+          12px/1.4 system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+      }
+
+      h1 {
+        font-size: 13px;
+        margin: 0 0 10px;
+      }
+
+      .row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .stack {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      label {
+        color: var(--muted);
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      input[type="text"] {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+      }
+
+      input[type="file"] {
+        flex: 1;
+      }
+
+      button {
+        padding: 8px 10px;
+        border: 0;
+        border-radius: 6px;
+        background: var(--btn);
+        color: var(--btnFg);
+        cursor: pointer;
+      }
+
+      button[disabled] {
+        background: var(--btnDisabled);
+        cursor: not-allowed;
+      }
+
+      .hint {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .report {
+        white-space: pre-wrap;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 10px;
+        font-family: var(--mono);
+        font-size: 11px;
+      }
+
+      .status-ok {
+        color: var(--ok);
+      }
+
+      .status-bad {
+        color: var(--danger);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stack">
+      <h1>__RAIL_PLUGIN_NAME__</h1>
+
+      <div>
+        <label for="url">Artifact URL</label>
+        <div class="row">
+          <input id="url" type="text" />
+          <button id="fetch">Fetch</button>
+        </div>
+        <div class="hint">Default: local proof server on localhost:4173</div>
+      </div>
+
+      <div>
+        <label for="file">Artifact File</label>
+        <div class="row">
+          <input id="file" type="file" accept="application/json" />
+        </div>
+        <div class="hint">Fallback when you can’t use the local server.</div>
+      </div>
+
+      <div class="row">
+        <button id="sync" disabled>Sync Variables</button>
+        <button id="check" disabled>Check Drift</button>
+        <span id="summary" class="hint"></span>
+      </div>
+
+      <div class="hint">
+        <strong>Sync</strong> writes the artifact into this file&rsquo;s
+        variables. <strong>Check Drift</strong> is read-only: it reports where
+        this file disagrees with the artifact. Tokens are authored in
+        <code>design-tokens/src/tokens/</code> only &mdash; fix drift there,
+        rebuild, then sync.
+      </div>
+
+      <div id="report" class="report">Waiting for input…</div>
+    </div>
+
+    <script>
+      const urlInput = document.getElementById("url");
+      const fetchBtn = document.getElementById("fetch");
+      const fileInput = document.getElementById("file");
+      const syncBtn = document.getElementById("sync");
+      const checkBtn = document.getElementById("check");
+      const reportEl = document.getElementById("report");
+      const summaryEl = document.getElementById("summary");
+
+      let loadedJsonText = null;
+
+      const driftReportUrl = "http://localhost:4173/figma/drift-report";
+
+      function send(message) {
+        parent.postMessage({ pluginMessage: message }, "*");
+      }
+
+      // Best-effort: the in-panel report is the primary output, and recording it
+      // as a repo artifact is a bonus that needs `pnpm figma:tokens:serve`.
+      async function recordDriftReport(json) {
+        try {
+          const res = await fetch(driftReportUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: json,
+          });
+          const body = await res.json().catch(() => null);
+          return res.ok && body
+            ? `recorded → ${body.written}`
+            : "not recorded (server error)";
+        } catch {
+          return "not recorded (start pnpm figma:tokens:serve)";
+        }
+      }
+
+      function setReport(text, ok = null) {
+        reportEl.textContent = text;
+        reportEl.classList.remove("status-ok", "status-bad");
+        if (ok === true) reportEl.classList.add("status-ok");
+        if (ok === false) reportEl.classList.add("status-bad");
+      }
+
+      function setSummary(text) {
+        summaryEl.textContent = text;
+      }
+
+      // Both actions read the loaded artifact, so they gate together.
+      function setReady(ready) {
+        syncBtn.disabled = !ready;
+        checkBtn.disabled = !ready;
+      }
+
+      fetchBtn.onclick = () => {
+        loadedJsonText = null;
+        setReady(false);
+        setSummary("");
+        setReport("Fetching…");
+        send({ type: "FETCH_URL", url: urlInput.value });
+      };
+
+      fileInput.onchange = async () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+        loadedJsonText = await file.text();
+        setReport(
+          `Loaded ${file.name} (${file.size} bytes). Ready to sync or check.`,
+        );
+        setReady(true);
+        setSummary("Loaded from file");
+      };
+
+      syncBtn.onclick = () => {
+        if (!loadedJsonText) {
+          setReport("No artifact loaded yet.", false);
+          return;
+        }
+        setReady(false);
+        setReport("Syncing variables…");
+        send({ type: "SYNC", jsonText: loadedJsonText });
+      };
+
+      checkBtn.onclick = () => {
+        if (!loadedJsonText) {
+          setReport("No artifact loaded yet.", false);
+          return;
+        }
+        setReady(false);
+        setReport("Comparing this file against the artifact…");
+        send({ type: "CHECK", jsonText: loadedJsonText });
+      };
+
+      window.onmessage = (event) => {
+        const msg = event.data && event.data.pluginMessage;
+        if (!msg || typeof msg.type !== "string") return;
+
+        if (msg.type === "DEFAULT_URL") {
+          urlInput.value = msg.url;
+          return;
+        }
+
+        if (msg.type === "FETCH_OK") {
+          loadedJsonText = msg.jsonText;
+          setReady(true);
+          setSummary(`Loaded from URL (${msg.byteCount} bytes)`);
+          setReport("Artifact fetched. Ready to sync or check.");
+          return;
+        }
+
+        if (msg.type === "FETCH_ERROR") {
+          loadedJsonText = null;
+          setReady(false);
+          setSummary("");
+          setReport(msg.message || "Fetch failed.", false);
+          return;
+        }
+
+        if (msg.type === "SYNC_REPORT") {
+          const ok = Boolean(msg.ok);
+          setReport(
+            msg.report || (ok ? "Sync succeeded." : "Sync failed."),
+            ok,
+          );
+          setReady(true);
+          return;
+        }
+
+        if (msg.type === "CHECK_REPORT") {
+          const ok = Boolean(msg.ok);
+          setReport(
+            msg.report || (ok ? "No drift." : "Drift check failed."),
+            ok,
+          );
+          setReady(true);
+          if (msg.json) {
+            setSummary("recording…");
+            recordDriftReport(msg.json).then(setSummary);
+          }
+          return;
+        }
+      };
+
+      send({ type: "UI_READY" });
+    </script>
+  </body>
+</html>
