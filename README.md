@@ -66,6 +66,34 @@ The default theme is the document body; every other theme is a partial tree unde
 Supported `$type`s: `color` (hex, hex8, `rgb()`, `rgba()`), `dimension`, `duration`, `number`,
 `string`, `boolean`.
 
+## Two rails, and which to use
+
+|                         | Plugin                  | REST API                                  |
+| ----------------------- | ----------------------- | ----------------------------------------- |
+| Figma plan              | any                     | Enterprise / full seat                    |
+| Credentials             | none — runs in Figma    | OAuth token in `FIGMA_OAUTH_ACCESS_TOKEN` |
+| Preserves `VariableID`s | **yes**                 | no — deletes and recreates the collection |
+| Multi-theme             | yes, one mode per theme | no, default theme only                    |
+| Runs in CI              | no                      | yes                                       |
+
+**Prefer the plugin.** The REST API has no upsert, so a sync deletes the collection and recreates
+it, which breaks every paint binding pointing at those variables. Reach for the REST rail when
+unattended CI publishing matters more than binding stability.
+
+```ts
+import { syncVariablesViaRest } from "@atomize-hq/figma-token-rail";
+
+const result = await syncVariablesViaRest({
+  artifactDocument: JSON.parse(await readFile(artifactPath, "utf8")),
+  figmaFile: "figma://file/<key>",
+  env: process.env,
+  collectionName: "Design Tokens",
+});
+```
+
+It performs the sync and reports what happened. Recording that outcome — a ledger, a promotion
+level, an audit trail — is deliberately the consuming repo's business, not this package's.
+
 ## Drift codes
 
 `MISSING_VARIABLE` · `UNEXPECTED_VARIABLE` · `TYPE_MISMATCH` · `ALIAS_BINDING` ·

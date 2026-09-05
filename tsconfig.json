@@ -13,5 +13,5 @@
     "resolveJsonModule": true,
     "noEmit": true
   },
-  "include": ["src/**/*.ts", "plugin/**/*.ts", "rails/**/*.ts"]
+  "include": ["src/**/*.ts", "plugin/**/*.ts"]
 }
