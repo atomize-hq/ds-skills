@@ -21,5 +21,5 @@ node node_modules/@atomize-hq/figma-token-rail/plugin/build.mjs \
 test -f ./plugin-out/manifest.json
 test -f ./plugin-out/code.js
 test -f ./plugin-out/ui.html
-node --input-type=module -e "import('@atomize-hq/figma-token-rail').then(m=>{if(typeof m.syncVariablesViaRest!=='function')throw new Error('API missing from installed package')})"
+node --input-type=module -e "import('@atomize-hq/figma-token-rail').then(m=>{if(typeof m.flattenTokenDocument!=='function'||typeof m.buildExpectedVariables!=='function')throw new Error('API missing from installed package')})"
 echo "pack check ok — installs, imports, and builds the plugin as a consumer"

@@ -31,7 +31,7 @@
     "format:check": "prettier --check .",
     "check": "pnpm format:check && pnpm typecheck && pnpm test && pnpm build && pnpm smoke && pnpm pack-check",
     "prepare": "pnpm build",
-    "smoke": "node --input-type=module -e \"import('./dist/index.js').then(m=>{if(typeof m.flattenTokenDocument!=='function'||typeof m.syncVariablesViaRest!=='function')throw new Error('built package does not expose its API');console.log('smoke ok')})\"",
+    "smoke": "node --input-type=module -e \"import('./dist/index.js').then(m=>{if(typeof m.flattenTokenDocument!=='function'||typeof m.buildExpectedVariables!=='function')throw new Error('built package does not expose its API');console.log('smoke ok')})\"",
     "pack-check": "bash scripts/pack-check.sh"
   },
   "peerDependencies": {

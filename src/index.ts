@@ -39,19 +39,3 @@ export {
   type ObservedVariable,
   type ThemeResolution,
 } from "./drift.js";
-
-export {
-  createSyncPlan,
-  FigmaVariablesSyncError,
-  formatSyncError,
-  normalizeSyncError,
-  parseFigmaFileKey,
-  resolveAccessToken,
-  syncVariablesViaRest,
-  verifySyncOutcome,
-  type RestSyncOptions,
-  type RestSyncResult,
-  type SyncPhase,
-  type SyncPlan,
-  type SyncVerification,
-} from "./rails/rest-variables.js";

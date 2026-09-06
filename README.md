@@ -66,9 +66,13 @@ The default theme is the document body; every other theme is a partial tree unde
 Supported `$type`s: `color` (hex, hex8, `rgb()`, `rgba()`), `dimension`, `duration`, `number`,
 `string`, `boolean`.
 
-## Two rails, and which to use
+## One rail: the plugin
 
-|                         | Plugin                  | REST API                                  |
+Publishing runs through the Figma plugin this package builds. There was a second rail — the
+Figma Variables REST API — and it was removed rather than kept as a deferred option, because
+the comparison never favoured it:
+
+|                         | Plugin                  | REST API (removed)                        |
 | ----------------------- | ----------------------- | ----------------------------------------- |
 | Figma plan              | any                     | Enterprise / full seat                    |
 | Credentials             | none — runs in Figma    | OAuth token in `FIGMA_OAUTH_ACCESS_TOKEN` |
@@ -76,23 +80,11 @@ Supported `$type`s: `color` (hex, hex8, `rgb()`, `rgba()`), `dimension`, `durati
 | Multi-theme             | yes, one mode per theme | no, default theme only                    |
 | Runs in CI              | no                      | yes                                       |
 
-**Prefer the plugin.** The REST API has no upsert, so a sync deletes the collection and recreates
-it, which breaks every paint binding pointing at those variables. Reach for the REST rail when
-unattended CI publishing matters more than binding stability.
-
-```ts
-import { syncVariablesViaRest } from "@atomize-hq/figma-token-rail";
-
-const result = await syncVariablesViaRest({
-  artifactDocument: JSON.parse(await readFile(artifactPath, "utf8")),
-  figmaFile: "figma://file/<key>",
-  env: process.env,
-  collectionName: "Design Tokens",
-});
-```
-
-It performs the sync and reports what happened. Recording that outcome — a ledger, a promotion
-level, an audit trail — is deliberately the consuming repo's business, not this package's.
+The REST API has no upsert, so a sync deleted the collection and recreated it, breaking every
+paint binding pointing at those variables. It bought unattended CI publishing at the cost of
+binding stability, single-theme output, and a seat tier most consumers do not have — and in the
+one repo that wired it, it never ran to success. Unattended publishing is a real want; when it
+comes back it will be a new design that preserves bindings, not this one restored.
 
 ## Drift codes
 
