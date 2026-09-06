@@ -117,7 +117,7 @@
           <input id="url" type="text" />
           <button id="fetch">Fetch</button>
         </div>
-        <div class="hint">Default: local proof server on localhost:4173</div>
+        <div class="hint">Default: __RAIL_ARTIFACT_ORIGIN__</div>
       </div>
 
       <div>
@@ -138,7 +138,7 @@
         <strong>Sync</strong> writes the artifact into this file&rsquo;s
         variables. <strong>Check Drift</strong> is read-only: it reports where
         this file disagrees with the artifact. Tokens are authored in
-        <code>design-tokens/src/tokens/</code> only &mdash; fix drift there,
+        <code>__RAIL_TOKEN_SOURCE_PATH__</code> only &mdash; fix drift there,
         rebuild, then sync.
       </div>
 
@@ -156,7 +156,10 @@
 
       let loadedJsonText = null;
 
-      const driftReportUrl = "http://localhost:4173/figma/drift-report";
+      // POST <origin>/figma/drift-report is this package's contract with the
+      // consumer's local proof server. The origin is configured; the path is not,
+      // because the server implements the rail's route, not the other way round.
+      const driftReportUrl = __RAIL_DRIFT_REPORT_URL__;
 
       function send(message) {
         parent.postMessage({ pluginMessage: message }, "*");

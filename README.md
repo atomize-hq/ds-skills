@@ -23,6 +23,7 @@ One file, `figma-token-rail.config.json`:
 {
   "collectionName": "Design Tokens",
   "artifactUrl": "http://localhost:4173/tokens.json",
+  "tokenSourcePath": "tokens/",
   "extensionsNamespace": "com.example.tokens",
   "fallbackThemeId": "light",
   "plugin": { "name": "Design Token Sync", "id": "design-token-sync-dev" }
@@ -33,6 +34,7 @@ One file, `figma-token-rail.config.json`:
 | --------------------------- | ------------------------------------------------------------------------------------------------ |
 | `collectionName`            | The Figma variable collection this rail owns. Created on first sync.                             |
 | `artifactUrl`               | Where the plugin fetches your published artifact from.                                           |
+| `tokenSourcePath`           | Where you author token sources. The plugin names it as the only place to fix drift.              |
 | `extensionsNamespace`       | `$extensions` key carrying `{ themeId }` for the default theme. `null` if you don't declare one. |
 | `fallbackThemeId`           | Theme id assumed when the artifact declares none.                                                |
 | `plugin.name` / `plugin.id` | Figma manifest fields. The id must be unique in your Figma account.                              |

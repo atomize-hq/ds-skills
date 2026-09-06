@@ -1,6 +1,7 @@
 {
   "collectionName": "Design Tokens",
   "artifactUrl": "http://localhost:4173/tokens.json",
+  "tokenSourcePath": "tokens/",
   "extensionsNamespace": "com.example.tokens",
   "fallbackThemeId": "light",
   "plugin": {
