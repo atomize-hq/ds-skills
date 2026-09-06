@@ -7,6 +7,12 @@
   "homepage": "https://github.com/atomize-hq/ds-skills#readme",
   "bugs": "https://github.com/atomize-hq/ds-skills/issues",
   "version": "0.3.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "ds-skills": "bin/ds-skills.mjs"
+  },
   "description": "Publish a DTCG token artifact into Figma variables, and check a Figma file for drift against it. Repo is canonical; Figma is downstream.",
   "license": "MIT",
   "type": "module",
@@ -21,6 +27,7 @@
     "./package.json": "./package.json"
   },
   "files": [
+    "bin",
     "dist",
     "src",
     "plugin",
