@@ -1,5 +1,5 @@
 /**
- * @atomize-hq/figma-token-rail
+ * @atomize-hq/ds-skills
  *
  * Moves a DTCG token artifact into Figma variables, and reports where a Figma
  * file has drifted from it. The repo that owns the tokens stays canonical:

@@ -1,4 +1,4 @@
-# @atomize-hq/figma-token-rail
+# @atomize-hq/ds-skills
 
 Publish a [DTCG](https://tr.designtokens.org/) token artifact into Figma variables, and check a
 Figma file for drift against it.
@@ -17,7 +17,7 @@ value someone changed inside Figma surfaces as a reviewable finding, not a silen
 
 ## Configure
 
-One file, `figma-token-rail.config.json`:
+One file, `ds-skills.config.json`:
 
 ```json
 {
@@ -42,7 +42,7 @@ One file, `figma-token-rail.config.json`:
 ## Build the plugin
 
 ```bash
-pnpm build:plugin --config figma-token-rail.config.json --out figma/plugin
+pnpm build:plugin --config ds-skills.config.json --out figma/plugin
 ```
 
 Then import the generated `manifest.json` into Figma. Nothing repo-specific is baked into this

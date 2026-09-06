@@ -19,7 +19,7 @@ const packageRoot = path.resolve(pluginRoot, "..");
 
 const args = process.argv.slice(2);
 const configPath = path.resolve(
-  readFlag(args, "--config") ?? "figma-token-rail.config.json",
+  readFlag(args, "--config") ?? "ds-skills.config.json",
 );
 const outDir = path.resolve(
   readFlag(args, "--out") ?? path.join(packageRoot, "plugin/dist"),
@@ -28,7 +28,7 @@ const outDir = path.resolve(
 if (!fs.existsSync(configPath)) {
   fail(
     `No config at ${configPath}.\n` +
-      "Pass --config <path>, or add figma-token-rail.config.json to the working directory.\n" +
+      "Pass --config <path>, or add ds-skills.config.json to the working directory.\n" +
       "See README.md for the shape.",
   );
 }

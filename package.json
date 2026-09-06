@@ -1,5 +1,11 @@
 {
-  "name": "@atomize-hq/figma-token-rail",
+  "name": "@atomize-hq/ds-skills",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/atomize-hq/ds-skills.git"
+  },
+  "homepage": "https://github.com/atomize-hq/ds-skills#readme",
+  "bugs": "https://github.com/atomize-hq/ds-skills/issues",
   "version": "0.3.0",
   "description": "Publish a DTCG token artifact into Figma variables, and check a Figma file for drift against it. Repo is canonical; Figma is downstream.",
   "license": "MIT",
