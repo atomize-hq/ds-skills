@@ -156,3 +156,61 @@ describe("validate-artifact CLI", () => {
     expect(result.stderr).toContain("Usage:");
   });
 });
+
+describe("a shipped schema is named, not located", () => {
+  // The fixture ledger's own profile: profiles/example.json deliberately uses a
+  // different artifact path, so pairing them would fail on the vocabulary
+  // rather than on the resolution under test.
+  const ledgerProfile = fileURLToPath(
+    new URL("../figma/__fixtures__/profiles/consumer-a.json", import.meta.url),
+  );
+
+  /**
+   * A consumer that has to write `<prefix>/lib/schemas/sync-ledger.schema.json`
+   * is reaching into the package's own layout in order to use the package —
+   * the coupling this migration exists to remove, reintroduced from the other
+   * side. Found by an installed-consumer check, not by reading the code.
+   */
+  it("resolves a bare name against the schemas this install ships", () => {
+    const result = run(
+      "sync-ledger",
+      sampleLedgerPath,
+      "--profile",
+      ledgerProfile,
+    );
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout).toContain("Sync Ledger");
+  });
+
+  it("still accepts a path, so a consumer can use a schema of its own", () => {
+    const result = run(
+      path.join(schemaDir, "sync-ledger.schema.json"),
+      sampleLedgerPath,
+      "--profile",
+      ledgerProfile,
+    );
+    expect(result.status, result.stderr).toBe(0);
+  });
+
+  it("lists what it has when the name is not one of them", () => {
+    // "No such file" would send a reader looking for a path they never wrote.
+    const result = run("ledger", sampleLedgerPath);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('No shipped schema named "ledger"');
+    expect(result.stderr).toContain("sync-ledger");
+  });
+
+  it("never reads a name as a relative path", () => {
+    // A file named `sync-ledger` in the working directory must not shadow the
+    // shipped schema, or the resolution depends on where you stood.
+    const decoy = path.join(tmpDir, "sync-ledger");
+    fs.writeFileSync(decoy, JSON.stringify({ type: "string" }));
+    const result = spawnSync(
+      process.execPath,
+      [scriptPath, "sync-ledger", sampleLedgerPath, "--profile", ledgerProfile],
+      { encoding: "utf8", cwd: tmpDir },
+    );
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout).toContain("Sync Ledger");
+  });
+});

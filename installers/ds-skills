@@ -1,0 +1,15 @@
+#!/bin/sh
+# Launcher. Resolves the install it belongs to from its own location, so the
+# executable works from any working directory and through a symlink, and never
+# depends on PATH to find its own library.
+set -e
+self="$0"
+while [ -L "$self" ]; do
+  link="$(readlink "$self")"
+  case "$link" in
+    /*) self="$link" ;;
+    *) self="$(dirname "$self")/$link" ;;
+  esac
+done
+here="$(cd "$(dirname "$self")" && pwd)"
+exec node "$here/../lib/bin/ds-skills.mjs" "$@"

@@ -192,9 +192,9 @@ describe("the generated endpoint, together with the permission that gates it", (
 });
 
 describe("buildPlugin writes what Figma loads", () => {
-  it("writes ui.html and manifest.json, and returns the same bytes", async () => {
+  it("writes ui.html and manifest.json, and returns the same bytes", () => {
     const outDir = path.join(tmpDir, "out");
-    const result = await buildPlugin({
+    const result = buildPlugin({
       configPath: exampleConfigPath,
       outDir,
       skipBundle: true,
@@ -209,13 +209,13 @@ describe("buildPlugin writes what Figma loads", () => {
     );
   });
 
-  it("cannot evaluate a config that is not there", async () => {
-    await expect(
+  it("cannot evaluate a config that is not there", () => {
+    expect(() =>
       buildPlugin({
         configPath: path.join(tmpDir, "absent.json"),
         outDir: path.join(tmpDir, "out2"),
         skipBundle: true,
       }),
-    ).rejects.toThrow(/No config at/);
+    ).toThrow(/No config at/);
   });
 });

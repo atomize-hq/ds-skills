@@ -26,7 +26,7 @@ const { buildPlugin, PluginBuildError } = await import(
 const args = process.argv.slice(2);
 
 try {
-  const result = await buildPlugin({
+  const result = buildPlugin({
     configPath: readFlag(args, "--config") ?? "ds-skills.config.json",
     outDir: readFlag(args, "--out") ?? path.join(packageRoot, "plugin/dist"),
   });

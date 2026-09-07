@@ -87,8 +87,12 @@ export async function startTokenServer(
   const hosts: string[] = [];
   await listen(servers[0]!, port, loopbackHosts[0]);
   hosts.push(loopbackHosts[0]);
+  // Port 0 means "any free port", so the bound port is only knowable after
+  // listening — and the second listener has to be told it explicitly, or the
+  // two families end up on different ports and the reported one is 0.
+  const bound = boundPort(servers[0]!, port);
   try {
-    await listen(servers[1]!, port, loopbackHosts[1]);
+    await listen(servers[1]!, bound, loopbackHosts[1]);
     hosts.push(loopbackHosts[1]);
   } catch {
     // No IPv6 loopback here; the IPv4 listener is the one that matters.
@@ -98,7 +102,7 @@ export async function startTokenServer(
   return {
     artifactUrlPath,
     driftReportUrlPath,
-    port,
+    port: bound,
     hosts,
     close: async () => {
       await Promise.all(
@@ -109,6 +113,13 @@ export async function startTokenServer(
       );
     },
   };
+}
+
+function boundPort(server: http.Server, requested: number): number {
+  const address = server.address();
+  return typeof address === "object" && address !== null
+    ? address.port
+    : requested;
 }
 
 function listen(

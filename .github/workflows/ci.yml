@@ -15,12 +15,23 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+
+      # The LOC guard reads tokei's JSON and fails when the input is empty, so
+      # a missing tokei fails the check rather than skipping it. Install it
+      # rather than let the guard be the thing that never runs here.
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: tokei
+
+      # pack-check exercises install.ps1 as well as install.sh: the two are a
+      # matched pair (SPEC.md §10.6), and claiming the PowerShell installer
+      # works because the bash one does is the overclaim §7.5 forbids.
+      - name: PowerShell is available for the Windows installer's tests
+        run: pwsh --version
+
       - run: pnpm install --frozen-lockfile
-      - run: pnpm format:check
-      - run: pnpm typecheck
-      - run: pnpm test
-      - run: pnpm build
-      - name: Built ESM loads under Node (catches missing .js specifiers)
-        run: pnpm smoke
-      - name: Plugin builds from the published tarball, not just the repo
-        run: pnpm pack-check
+
+      # One gate, the same one a developer runs: format, lint, typecheck, LOC,
+      # tests, build, smoke, and the installed-artifact gate. Listing the steps
+      # separately here is how CI and `pnpm check` drift apart.
+      - run: pnpm check

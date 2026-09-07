@@ -39,8 +39,8 @@ function readRef(file: string): Record<string, unknown> {
 }
 
 describe("capture", () => {
-  it("writes both references", async () => {
-    const result = await captureBaselines(options());
+  it("writes both references", () => {
+    const result = captureBaselines(options());
     expect(result.ok).toBe(true);
     expect(result.outcomes.map((o) => o.status)).toEqual([
       "written",
@@ -50,12 +50,12 @@ describe("capture", () => {
     expect(fs.existsSync(railRef())).toBe(true);
   });
 
-  it("leaves an unchanged reference untouched, byte for byte", async () => {
-    await captureBaselines(options());
+  it("leaves an unchanged reference untouched, byte for byte", () => {
+    captureBaselines(options());
     const before = [manifestRef(), railRef()].map((f) =>
       fs.readFileSync(f, "utf8"),
     );
-    const again = await captureBaselines(options());
+    const again = captureBaselines(options());
 
     expect(again.outcomes.map((o) => o.status)).toEqual([
       "unchanged",
@@ -68,10 +68,10 @@ describe("capture", () => {
 });
 
 describe("the non-overwrite guard", () => {
-  it("writes NEITHER reference when only one has drifted", async () => {
+  it("writes NEITHER reference when only one has drifted", () => {
     // A partial write leaves the reference set internally inconsistent, and half
     // a baseline still looks like a baseline.
-    await captureBaselines(options());
+    captureBaselines(options());
     const railBefore = fs.readFileSync(railRef(), "utf8");
     fs.writeFileSync(
       manifestRef(),
@@ -83,7 +83,7 @@ describe("the non-overwrite guard", () => {
     );
     const manifestBefore = fs.readFileSync(manifestRef(), "utf8");
 
-    const result = await captureBaselines(options());
+    const result = captureBaselines(options());
 
     expect(result.ok).toBe(false);
     expect(result.errors.join(" ")).toContain("RAIL_BASELINE_WOULD_OVERWRITE");
@@ -91,27 +91,27 @@ describe("the non-overwrite guard", () => {
     expect(fs.readFileSync(railRef(), "utf8")).toBe(railBefore);
   });
 
-  it("says which reference drifted", async () => {
-    await captureBaselines(options());
+  it("says which reference drifted", () => {
+    captureBaselines(options());
     fs.writeFileSync(
       railRef(),
       JSON.stringify({ ...readRef(railRef()), variables: [] }, null, 2),
     );
-    const result = await captureBaselines(options());
+    const result = captureBaselines(options());
     expect(result.errors.join(" ")).toContain("token-rail.baseline.json");
     expect(result.outcomes.find((o) => o.name === "token-rail")?.status).toBe(
       "drifted",
     );
   });
 
-  it("only --force overwrites", async () => {
-    await captureBaselines(options());
+  it("only --force overwrites", () => {
+    captureBaselines(options());
     fs.writeFileSync(
       railRef(),
       JSON.stringify({ ...readRef(railRef()), variables: [] }, null, 2),
     );
 
-    const forced = await captureBaselines(options({ force: true }));
+    const forced = captureBaselines(options({ force: true }));
     expect(forced.ok).toBe(true);
     expect(
       (readRef(railRef())["variables"] as unknown[]).length,
@@ -120,18 +120,18 @@ describe("the non-overwrite guard", () => {
 });
 
 describe("check never writes", () => {
-  it("fails when a required reference is missing, and creates nothing", async () => {
+  it("fails when a required reference is missing, and creates nothing", () => {
     // "There is nothing to compare against" and "it matches" are different
     // answers, and only one of them is a pass.
-    const result = await checkBaselines(options());
+    const result = checkBaselines(options());
     expect(result.ok).toBe(false);
     expect(result.errors.join(" ")).toContain("RAIL_BASELINE_MISSING");
     expect(fs.existsSync(manifestRef())).toBe(false);
     expect(fs.existsSync(railRef())).toBe(false);
   });
 
-  it("reports drift without repairing it", async () => {
-    await captureBaselines(options());
+  it("reports drift without repairing it", () => {
+    captureBaselines(options());
     const drifted = JSON.stringify(
       { ...readRef(railRef()), variables: [] },
       null,
@@ -139,7 +139,7 @@ describe("check never writes", () => {
     );
     fs.writeFileSync(railRef(), drifted);
 
-    const result = await checkBaselines(options());
+    const result = checkBaselines(options());
 
     expect(result.ok).toBe(false);
     expect(result.errors.join(" ")).toContain("RAIL_BASELINE_DRIFT");
@@ -148,9 +148,9 @@ describe("check never writes", () => {
     expect(fs.readFileSync(railRef(), "utf8")).toBe(drifted);
   });
 
-  it("passes against references it did not just write", async () => {
-    await captureBaselines(options());
-    const result = await checkBaselines(options());
+  it("passes against references it did not just write", () => {
+    captureBaselines(options());
+    const result = checkBaselines(options());
     expect(result.ok).toBe(true);
     expect(result.outcomes.map((o) => o.status)).toEqual([
       "unchanged",
@@ -160,8 +160,8 @@ describe("check never writes", () => {
 });
 
 describe("provenance is preserved, not compared", () => {
-  it("carries a reviewer's note through a re-capture", async () => {
-    await captureBaselines(options());
+  it("carries a reviewer's note through a re-capture", () => {
+    captureBaselines(options());
     const note =
       "Pre-migration reference. Never regenerate this from the new code.";
     fs.writeFileSync(
@@ -172,19 +172,19 @@ describe("provenance is preserved, not compared", () => {
     // Forced, so the file is genuinely rewritten: preservation only has to hold
     // when something substantive changed, and an unchanged file is never
     // touched at all.
-    const result = await captureBaselines(options({ force: true }));
+    const result = captureBaselines(options({ force: true }));
 
     // A capturer that erased the reviewer's note would be editing the review.
     expect(result.ok).toBe(true);
     expect(readRef(railRef())["$comment"]).toBe(note);
   });
 
-  it("stays byte-stable across repeated captures once provenance exists", async () => {
+  it("stays byte-stable across repeated captures once provenance exists", () => {
     // The case that broke: carrying a preserved key forward reordered the
     // output, so a re-capture produced a diff with no change in it — and a
     // capture whose second run is not a no-op cannot be told apart from one
     // that found real drift.
-    await captureBaselines(options());
+    captureBaselines(options());
     fs.writeFileSync(
       railRef(),
       JSON.stringify(
@@ -194,9 +194,9 @@ describe("provenance is preserved, not compared", () => {
       ),
     );
 
-    await captureBaselines(options({ force: true }));
+    captureBaselines(options({ force: true }));
     const second = fs.readFileSync(railRef(), "utf8");
-    await captureBaselines(options({ force: true }));
+    captureBaselines(options({ force: true }));
 
     expect(fs.readFileSync(railRef(), "utf8")).toBe(second);
     expect(Object.keys(readRef(railRef())).slice(0, 2)).toEqual([
@@ -205,8 +205,8 @@ describe("provenance is preserved, not compared", () => {
     ]);
   });
 
-  it("does not report drift because the tool renamed itself", async () => {
-    await captureBaselines(options());
+  it("does not report drift because the tool renamed itself", () => {
+    captureBaselines(options());
     fs.writeFileSync(
       manifestRef(),
       JSON.stringify(
@@ -215,20 +215,20 @@ describe("provenance is preserved, not compared", () => {
         2,
       ),
     );
-    expect((await checkBaselines(options())).ok).toBe(true);
+    expect(checkBaselines(options()).ok).toBe(true);
     expect(provenanceKeys).toContain("producedBy");
   });
 });
 
 describe("a stale committed build is its own finding", () => {
-  it("reports a built manifest that no longer matches the config", async () => {
+  it("reports a built manifest that no longer matches the config", () => {
     // Invisible to a baseline captured from a scratch build, and exactly the
     // state a consumer ends up in after editing a config without rebuilding.
     const pluginOutDir = path.join(tmpDir, "plugin");
     fs.mkdirSync(pluginOutDir, { recursive: true });
     fs.writeFileSync(path.join(pluginOutDir, "manifest.json"), "{}\n");
 
-    const result = await checkBaselines(options({ pluginOutDir }));
+    const result = checkBaselines(options({ pluginOutDir }));
 
     expect(result.errors.join(" ")).toContain("RAIL_BASELINE_STALE_BUILD");
   });

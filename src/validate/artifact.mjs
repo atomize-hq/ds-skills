@@ -33,7 +33,50 @@ function readJson(target) {
 }
 
 export const validateUsage =
-  "Usage: ds-skills validate <schema.json> <instance.json> [--profile <profile.json>]";
+  "Usage: ds-skills validate <schema> <instance.json> [--profile <profile.json>]\n" +
+  "  <schema> is a shipped schema's name, or a path to one of your own.";
+
+/** The schemas this install ships, resolved from its own root. */
+const schemasRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../../schemas",
+);
+
+/**
+ * A name resolves to a shipped schema; anything that looks like a path is one.
+ *
+ * Without this a consumer has to write
+ * `<prefix>/lib/schemas/sync-ledger.schema.json` — reaching into the package's
+ * own layout to use the package, which is the coupling this migration removes.
+ * Found by writing the installed-consumer check and having it fail.
+ */
+export function resolveSchema(target) {
+  if (
+    target.includes(path.sep) ||
+    target.includes("/") ||
+    target.endsWith(".json")
+  ) {
+    return target;
+  }
+  const file = path.join(schemasRoot, `${target}.schema.json`);
+  if (!fs.existsSync(file)) {
+    fail(
+      `No shipped schema named "${target}".\n` +
+        `Available: ${shippedSchemaNames().join(", ")}\n` +
+        "Or pass a path to a schema of your own.",
+    );
+  }
+  return file;
+}
+
+function shippedSchemaNames() {
+  if (!fs.existsSync(schemasRoot)) return [];
+  return fs
+    .readdirSync(schemasRoot)
+    .filter((name) => name.endsWith(".schema.json"))
+    .map((name) => name.replace(/\.schema\.json$/, ""))
+    .sort();
+}
 
 /**
  * The process contract, as a function: same output, same exit codes, callable
@@ -55,9 +98,10 @@ export function runValidateArtifactCli(argv, io = {}) {
       args.splice(profileIndex, 2);
     }
 
-    const [schemaPath, instancePath] = args;
-    if (!schemaPath || !instancePath) fail(validateUsage);
+    const [schemaTarget, instancePath] = args;
+    if (!schemaTarget || !instancePath) fail(validateUsage);
 
+    const schemaPath = resolveSchema(schemaTarget);
     const schema = readJson(schemaPath);
     const instance = readJson(instancePath);
     const errors = validate(instance, schema, {

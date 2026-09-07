@@ -45,9 +45,9 @@ export async function runFigmaCommand(
   }
 }
 
-async function pluginBuild(options: Options, io: Streams): Promise<number> {
+function pluginBuild(options: Options, io: Streams): number {
   try {
-    const result = await buildPlugin({
+    const result = buildPlugin({
       configPath: required(options, "config"),
       outDir: required(options, "out"),
     });
@@ -97,7 +97,7 @@ function drift(options: Options, io: Streams): number {
   return result.ok ? EXIT_OK : EXIT_NONCONFORMANT;
 }
 
-async function baseline(options: Options, io: Streams): Promise<number> {
+function baseline(options: Options, io: Streams): number {
   const request = {
     configPath: required(options, "config"),
     artifactPath: required(options, "artifact"),
@@ -116,8 +116,8 @@ async function baseline(options: Options, io: Streams): Promise<number> {
   }
 
   const result: BaselineResult = checking
-    ? await checkBaselines(request)
-    : await captureBaselines(request);
+    ? checkBaselines(request)
+    : captureBaselines(request);
 
   io.stdout.write(
     `${checking ? "checked" : "captured"} ${result.outcomes.length} baseline(s)\n`,

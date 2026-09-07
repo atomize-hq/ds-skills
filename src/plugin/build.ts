@@ -18,10 +18,32 @@ const pluginRoot = path.resolve(
   "../../plugin",
 );
 
+/**
+ * The bundle produced once at package build time by `scripts/prebuild-plugin.mjs`
+ * and shipped inside the release. Command-time assembly is two substitutions
+ * into it, so a consumer needs no bundler — §7.3's optional-peer defect.
+ *
+ * Under dist/ with the other build output, and for the same reason: it is
+ * generated, gitignored, shipped, and no more subject to the LOC guard than a
+ * compiled module is.
+ */
+export const prebuiltBundlePath = path.resolve(
+  pluginRoot,
+  "../dist/plugin-bundle/code.js",
+);
+
+/**
+ * The two values a consumer's config decides, as they survive bundling: free
+ * identifiers, declared but never defined in `plugin/code.ts`. Substituting an
+ * identifier with a JSON literal is always valid in expression position, which
+ * is why the seam is an identifier rather than a string placeholder.
+ */
+export const bakedIdentifiers = ["__html__", "__RAIL_CONFIG__"] as const;
+
 export interface BuildPluginOptions {
   readonly configPath: string;
   readonly outDir: string;
-  /** Skip the esbuild bundle. The substitutions are what most tests care about. */
+  /** Skip assembling code.js. The substitutions are what most tests care about. */
   readonly skipBundle?: boolean;
 }
 
@@ -39,9 +61,7 @@ export class PluginBuildError extends Error {
   }
 }
 
-export async function buildPlugin(
-  options: BuildPluginOptions,
-): Promise<BuildPluginResult> {
+export function buildPlugin(options: BuildPluginOptions): BuildPluginResult {
   const configPath = path.resolve(options.configPath);
   if (!fs.existsSync(configPath)) {
     // A missing config is an inability to evaluate, not a failed build.
@@ -63,27 +83,67 @@ export async function buildPlugin(
   fs.writeFileSync(path.join(outDir, "manifest.json"), manifest);
 
   if (options.skipBundle !== true) {
-    // Imported here rather than at module load: esbuild is an optional peer, and
-    // `figma verify` has no business requiring a bundler to read a JSON file.
-    const { build } = await import("esbuild");
-    await build({
-      entryPoints: [path.join(pluginRoot, "code.ts")],
-      bundle: true,
-      format: "iife",
-      platform: "browser",
-      target: "es2017",
-      sourcemap: true,
-      outfile: path.join(outDir, "code.js"),
-      define: {
-        __html__: JSON.stringify(uiHtml),
-        __RAIL_CONFIG__: JSON.stringify(config),
-      },
-      loader: { ".html": "text" },
-      logLevel: "info",
-    });
+    fs.writeFileSync(
+      path.join(outDir, "code.js"),
+      bakeBundle(readPrebuiltBundle(), config, uiHtml),
+    );
+    // The map describes the prebuilt bundle. Substitution replaces identifiers
+    // with single-line JSON, so every line number still holds; only the two
+    // columns carrying a baked value move.
+    const map = `${prebuiltBundlePath}.map`;
+    if (fs.existsSync(map)) {
+      fs.copyFileSync(map, path.join(outDir, "code.js.map"));
+    }
   }
 
   return { config, outDir, manifest, uiHtml };
+}
+
+/**
+ * Read the shipped bundle, and say plainly when it is absent. A build that fell
+ * back to running a bundler here would reintroduce the defect this replaced,
+ * and would do it only on the machines that lack one.
+ */
+export function readPrebuiltBundle(file: string = prebuiltBundlePath): string {
+  if (!fs.existsSync(file)) {
+    throw new PluginBuildError(
+      `No prebuilt plugin bundle at ${file}.\n` +
+        "It is produced by the package build and shipped in the release, so an " +
+        "install without one is incomplete rather than unbuilt.",
+    );
+  }
+  return fs.readFileSync(file, "utf8");
+}
+
+/** Substitute the consumer's two values into the prebuilt bundle. */
+export function bakeBundle(
+  bundle: string,
+  config: RailConfig,
+  uiHtml: string,
+): string {
+  const values: Record<string, string> = {
+    // A JS string literal for the one, a JS object literal for the other. JSON
+    // text is already valid in expression position, so the config needs
+    // escaping but not quoting — quoting it would hand the plugin a string
+    // where it reads fields.
+    __html__: jsString(uiHtml),
+    __RAIL_CONFIG__: escapeJsLiterals(JSON.stringify(config)),
+  };
+  let out = bundle;
+  for (const identifier of bakedIdentifiers) {
+    // Exactly one, not at least one: a second occurrence would mean the bundler
+    // inlined the identifier somewhere else, and replacing all of them would
+    // corrupt code that merely mentions the name.
+    const occurrences = out.split(identifier).length - 1;
+    if (occurrences !== 1) {
+      throw new PluginBuildError(
+        `The prebuilt bundle contains ${identifier} ${occurrences} times; expected exactly one. ` +
+          "Rebuild the package: this bundle and this builder disagree.",
+      );
+    }
+    out = out.replace(identifier, values[identifier] as string);
+  }
+  return out;
 }
 
 /** The substitution step alone — no filesystem writes, no bundler. */
@@ -154,9 +214,21 @@ export function substitute(
 
 /** A JS string literal, safe inside a <script> block. */
 export function jsString(value: string): string {
-  return JSON.stringify(value)
+  return escapeJsLiterals(JSON.stringify(value));
+}
+
+/**
+ * Make JSON text safe to paste into JavaScript. `<` and `>` so a value can
+ * never close a script element; U+2028 and U+2029 because JSON permits them
+ * raw inside strings and they are line terminators to a pre-ES2019 parser,
+ * which is what `target: es2017` says we compile for.
+ */
+export function escapeJsLiterals(json: string): string {
+  return json
     .replaceAll("<", "\\u003c")
-    .replaceAll(">", "\\u003e");
+    .replaceAll(">", "\\u003e")
+    .replaceAll("\u2028", "\\u2028")
+    .replaceAll("\u2029", "\\u2029");
 }
 
 export function escapeHtml(value: string): string {

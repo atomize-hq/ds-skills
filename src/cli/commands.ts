@@ -1,5 +1,5 @@
 /**
- * The nine commands. Four of them — `ledger parity`, `proof validate`,
+ * The ten commands. Four of them — `ledger parity`, `proof validate`,
  * `figma serve`, `figma baseline` — were found by the consumer's disposition
  * inventory rather than designed, and without them the consumer cannot reach
  * zero rail executables.
@@ -18,6 +18,13 @@ export interface CommandSpec {
   readonly effect: CommandEffect;
   /** Set once the command does something. Dispatch refuses it until then. */
   readonly implemented: boolean;
+  /**
+   * Whether the command refuses to run with no arguments. All but one do, and
+   * the gate that checks for placeholder commands needs to know which — bare
+   * `ds-skills skills` is a legitimate answer, not a command that failed to
+   * notice it was given nothing.
+   */
+  readonly requiresArguments: boolean;
 }
 
 export const commands: readonly CommandSpec[] = [
@@ -28,6 +35,7 @@ export const commands: readonly CommandSpec[] = [
     machineReadable: false,
     effect: "writes",
     implemented: true,
+    requiresArguments: true,
   },
   {
     path: ["figma", "verify"],
@@ -37,6 +45,7 @@ export const commands: readonly CommandSpec[] = [
     machineReadable: false,
     effect: "read-only",
     implemented: true,
+    requiresArguments: true,
   },
   {
     path: ["figma", "drift"],
@@ -46,6 +55,7 @@ export const commands: readonly CommandSpec[] = [
     machineReadable: false,
     effect: "read-only",
     implemented: true,
+    requiresArguments: true,
   },
   {
     path: ["figma", "serve"],
@@ -55,6 +65,7 @@ export const commands: readonly CommandSpec[] = [
     machineReadable: false,
     effect: "serves",
     implemented: true,
+    requiresArguments: true,
   },
   {
     path: ["figma", "baseline"],
@@ -64,6 +75,7 @@ export const commands: readonly CommandSpec[] = [
     machineReadable: false,
     effect: "writes",
     implemented: true,
+    requiresArguments: true,
   },
   {
     path: ["ledger", "validate"],
@@ -72,6 +84,7 @@ export const commands: readonly CommandSpec[] = [
     machineReadable: true,
     effect: "read-only",
     implemented: true,
+    requiresArguments: true,
   },
   {
     path: ["ledger", "parity"],
@@ -80,6 +93,7 @@ export const commands: readonly CommandSpec[] = [
     machineReadable: true,
     effect: "read-only",
     implemented: true,
+    requiresArguments: true,
   },
   {
     path: ["proof", "validate"],
@@ -88,6 +102,16 @@ export const commands: readonly CommandSpec[] = [
     machineReadable: true,
     effect: "read-only",
     implemented: true,
+    requiresArguments: true,
+  },
+  {
+    path: ["skills"],
+    summary: "Locate the installed skills and check them against this release",
+    usage: "ds-skills skills [--root <dir>]",
+    machineReadable: false,
+    effect: "read-only",
+    implemented: true,
+    requiresArguments: false,
   },
   {
     path: ["validate"],
@@ -96,6 +120,7 @@ export const commands: readonly CommandSpec[] = [
     machineReadable: false,
     effect: "read-only",
     implemented: true,
+    requiresArguments: true,
   },
 ];
 

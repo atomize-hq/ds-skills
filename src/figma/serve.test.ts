@@ -215,3 +215,26 @@ describe("the bind surface", () => {
     expect(server.hosts).not.toContain("0.0.0.0");
   });
 });
+
+describe("an ephemeral port is reported, not requested", () => {
+  it("binds a free port and says which one", async () => {
+    // `--port 0` used to report 0 — a URL nothing can connect to — and bind the
+    // two loopback families to two different ephemeral ports.
+    const configPath = writeConfig();
+    server = await startTokenServer({ configPath, artifactPath, port: 0 });
+
+    expect(server.port).toBeGreaterThan(0);
+    expect((await get(server.port, server.artifactUrlPath)).status).toBe(200);
+  });
+
+  it("puts every loopback family on that same port", async () => {
+    const configPath = writeConfig();
+    server = await startTokenServer({ configPath, artifactPath, port: 0 });
+    for (const host of server.hosts) {
+      const response = await fetch(
+        `http://${host.includes(":") ? `[${host}]` : host}:${server.port}${server.artifactUrlPath}`,
+      );
+      expect(response.status, host).toBe(200);
+    }
+  });
+});

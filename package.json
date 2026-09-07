@@ -31,6 +31,7 @@
     "dist",
     "src",
     "plugin",
+    "release.json",
     "skills",
     "schemas",
     "templates",
@@ -39,7 +40,7 @@
   ],
   "packageManager": "pnpm@10.11.1",
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node scripts/prebuild-plugin.mjs && node scripts/stamp-release.mjs",
     "build:plugin": "node plugin/build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -51,15 +52,9 @@
     "smoke": "node --input-type=module -e \"import('./dist/index.js').then(m=>{if(typeof m.flattenTokenDocument!=='function'||typeof m.buildExpectedVariables!=='function')throw new Error('built package does not expose its API');console.log('smoke ok')})\"",
     "pack-check": "bash scripts/pack-check.sh",
     "lint": "eslint .",
-    "loc": "tokei --files --output json src plugin bin scripts | node scripts/validate-loc.mjs 300"
-  },
-  "peerDependencies": {
-    "esbuild": ">=0.20.0"
-  },
-  "peerDependenciesMeta": {
-    "esbuild": {
-      "optional": true
-    }
+    "loc": "tokei --files --output json src plugin bin scripts installers | node scripts/validate-loc.mjs 300",
+    "release:stage": "node scripts/release/stage.mjs",
+    "rehearse": "bash scripts/checks/cutover-rehearsal.sh"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -1,0 +1,181 @@
+#!/usr/bin/env node
+/**
+ * Author a data-only consumer: config, profile, artifact, ledger and the proof
+ * the ledger binds to. No product dependencies, no repository, no credentials.
+ *
+ *   node scripts/checks/make-consumer.mjs <dir> alpha|beta
+ *
+ * The two flavours differ in every profiled dimension — namespace, artifact
+ * path, destination, plugin identity, origin, theme, collection name and the
+ * permitted publish modes. §7.3: copying one layout under another directory
+ * name proves nothing about portability.
+ */
+import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
+import process from "node:process";
+
+const [dir, flavour] = process.argv.slice(2);
+const shape = {
+  alpha: {
+    namespace: "com.example.tokens",
+    theme: "dark",
+    otherTheme: "light",
+    collection: "Design Tokens",
+    plugin: { name: "Design Token Sync", id: "design-token-sync-dev" },
+    origin: "http://localhost:4173",
+    tokenSourcePath: "tokens/",
+    artifactPath: "dist/tokens.json",
+    destinationName: "Consumer Alpha",
+    figmaFile: "figma://file/consumer-alpha",
+    modes: ["plugin-import-manual", "tokens-studio-carried"],
+    revision: "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+  },
+  beta: {
+    namespace: "dev.beta.design",
+    theme: "midnight",
+    otherTheme: "daylight",
+    collection: "Beta Tokens",
+    plugin: { name: "Beta Token Sync", id: "beta-token-sync" },
+    origin: "http://127.0.0.1:9911",
+    tokenSourcePath: "packages/tokens/src/",
+    artifactPath: "build/design-tokens.json",
+    destinationName: "Consumer Beta",
+    figmaFile: "figma://file/consumer-beta",
+    modes: ["plugin-import-manual"],
+    revision: "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+  },
+}[flavour];
+if (shape === undefined) {
+  process.stderr.write(`unknown consumer flavour: ${flavour}\n`);
+  process.exit(1);
+}
+
+fs.mkdirSync(dir, { recursive: true });
+const write = (name, data) =>
+  fs.writeFileSync(path.join(dir, name), `${JSON.stringify(data, null, 2)}\n`);
+
+write("config.json", {
+  collectionName: shape.collection,
+  artifactUrl: `${shape.origin}/${shape.artifactPath}`,
+  tokenSourcePath: shape.tokenSourcePath,
+  extensionsNamespace: shape.namespace,
+  fallbackThemeId: shape.otherTheme,
+  plugin: shape.plugin,
+});
+
+write("profile.json", {
+  "artifact-path": { const: shape.artifactPath },
+  "destination-name": { const: shape.destinationName },
+  "destination-figma-file": { const: shape.figmaFile },
+  "publish-modes": { enum: shape.modes },
+});
+
+write("artifact.json", {
+  $extensions: { [shape.namespace]: { source: "repo", themeId: shape.theme } },
+  $themeOverrides: {
+    [shape.otherTheme]: {
+      brand: { base: { $type: "color", $value: "#1d4ed8" } },
+      space: { gap: { $type: "dimension", $value: "12px" } },
+    },
+  },
+  brand: {
+    base: { $type: "color", $value: "#155dfc" },
+    contrast: { $type: "color", $value: "#eff6ff" },
+  },
+  space: { gap: { $type: "dimension", $value: "16px" } },
+  scale: { steps: { $type: "number", $value: 8 } },
+});
+
+const proof = {
+  proofVersion: "1",
+  mode: shape.modes[0],
+  artifact: { path: shape.artifactPath, gitSha: shape.revision },
+  destination: { name: shape.destinationName, figmaFile: shape.figmaFile },
+  materialization: { status: "passed", attemptedAt: "2026-05-01T00:00:00Z" },
+  carrier: { used: false, reason: null, exitExpectation: null },
+};
+const proofBytes = Buffer.from(`${JSON.stringify(proof, null, 2)}\n`);
+fs.writeFileSync(path.join(dir, "publish-proof.json"), proofBytes);
+
+const ledger = {
+  ledgerVersion: "3",
+  artifact: { path: shape.artifactPath, revision: shape.revision },
+  publish: {
+    mode: shape.modes[0],
+    tokensStudioCarrier: false,
+    figmaFile: shape.figmaFile,
+  },
+  verification: {
+    materializationStatus: "passed",
+    lastVerifiedRevision: shape.revision,
+  },
+  promotion: {
+    parityMode: "required",
+    highestEarnedLevel: "E-promotion-complete",
+  },
+  exceptions: [],
+  publication: {
+    proof: "./publish-proof.json",
+    // Bound to the bytes as written, not to a re-serialization of them.
+    sha256: crypto.createHash("sha256").update(proofBytes).digest("hex"),
+  },
+};
+write("sync-ledger.json", ledger);
+
+// The nonconformant record every consumer needs in order to prove its gate can
+// go red: the proof is edited after the ledger attested to its digest.
+fs.mkdirSync(path.join(dir, "broken"), { recursive: true });
+fs.writeFileSync(
+  path.join(dir, "broken/publish-proof.json"),
+  `${JSON.stringify({ ...proof, materialization: { ...proof.materialization, attemptedAt: "2026-06-01T00:00:00Z" } }, null, 2)}\n`,
+);
+write("broken/sync-ledger.json", ledger);
+
+// A recorded observation of the Figma collection, as the plugin would post it.
+// The numbers are hand-computed from the artifact above rather than produced by
+// the package's own flattener: an expectation generated by the code under test
+// agrees with it by construction and proves nothing (§7.5).
+const rgb = (r, g, b) => ({ r: r / 255, g: g / 255, b: b / 255, a: 1 });
+const observed = {
+  name: shape.collection,
+  modeNames: [shape.theme, shape.otherTheme],
+  variables: [
+    {
+      name: "brand/base",
+      resolvedType: "COLOR",
+      valuesByMode: {
+        [shape.theme]: rgb(0x15, 0x5d, 0xfc),
+        [shape.otherTheme]: rgb(0x1d, 0x4e, 0xd8),
+      },
+    },
+    {
+      name: "brand/contrast",
+      resolvedType: "COLOR",
+      valuesByMode: {
+        [shape.theme]: rgb(0xef, 0xf6, 0xff),
+        [shape.otherTheme]: rgb(0xef, 0xf6, 0xff),
+      },
+    },
+    {
+      name: "scale/steps",
+      resolvedType: "FLOAT",
+      valuesByMode: { [shape.theme]: 8, [shape.otherTheme]: 8 },
+    },
+    {
+      name: "space/gap",
+      resolvedType: "FLOAT",
+      valuesByMode: { [shape.theme]: 16, [shape.otherTheme]: 12 },
+    },
+  ],
+};
+write("observed.json", observed);
+
+// The same observation with one variable removed from the file — the finding a
+// drift gate exists to make, so the consumer can prove its gate goes red.
+write("observed-drifted.json", {
+  ...observed,
+  variables: observed.variables.filter((v) => v.name !== "space/gap"),
+});
+
+process.stdout.write(`${flavour} consumer written to ${dir}\n`);

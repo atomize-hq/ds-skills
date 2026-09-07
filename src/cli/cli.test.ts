@@ -22,15 +22,18 @@ async function capture(argv: readonly string[]) {
 }
 
 describe("command registry", () => {
-  it("carries all nine commands, including the four the inventory found", () => {
+  it("carries all ten commands, including the four the inventory found", () => {
     const names = commands.map((c) => c.path.join(" "));
-    expect(names).toHaveLength(9);
+    expect(names).toHaveLength(10);
     // The four that were discovered rather than designed. Losing one means the
     // consumer keeps a rail executable, and a published release cannot add it.
     expect(names).toContain("ledger parity");
     expect(names).toContain("proof validate");
     expect(names).toContain("figma serve");
     expect(names).toContain("figma baseline");
+    // The tenth answers "where are the installed skills, and are they this
+    // release's?" — T11's discovery question and §10.6's skew rule in one.
+    expect(names).toContain("skills");
   });
 
   it("matches the longest command path, not the first prefix", () => {
@@ -94,11 +97,12 @@ describe("failure behaviour", () => {
     expect(commands.filter((c) => !c.implemented)).toEqual([]);
     for (const command of commands) {
       const { code, out, err } = await capture(command.path);
-      expect(code, command.path.join(" ")).not.toBe(EXIT_OK);
-      expect(out, command.path.join(" ")).toBe("");
       expect(err, command.path.join(" ")).not.toContain(
         "[CLI_COMMAND_NOT_IMPLEMENTED]",
       );
+      if (!command.requiresArguments) continue;
+      expect(code, command.path.join(" ")).not.toBe(EXIT_OK);
+      expect(out, command.path.join(" ")).toBe("");
     }
   });
 
@@ -151,5 +155,27 @@ describe("the exit-code contract", () => {
       expect(emitsMachineResult(code)).toBe(false);
       expect(out).toBe("");
     }
+  });
+});
+
+describe("baseline's two modes are not combinable", () => {
+  it("refuses --check with --force", async () => {
+    // Lives here rather than in the installed-artifact gate: a shell script
+    // that merely mentions --force trips the rule forbidding any unattended
+    // gate from passing it, and the rule is right.
+    const { code, err } = await capture([
+      "figma",
+      "baseline",
+      "--check",
+      "--force",
+      "--config",
+      "x",
+      "--artifact",
+      "y",
+      "--out",
+      "z",
+    ]);
+    expect(code).toBe(EXIT_CANNOT_EVALUATE);
+    expect(err).toContain("--check never writes");
   });
 });

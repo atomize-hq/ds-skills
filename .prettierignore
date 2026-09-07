@@ -2,3 +2,7 @@ dist/
 plugin/code.js
 plugin/code.js.map
 plugin/manifest.json
+release.json
+# Staged release candidates.
+release/
+skills/RELEASE.json

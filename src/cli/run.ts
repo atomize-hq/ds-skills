@@ -18,6 +18,7 @@ import {
   type RailOptions,
 } from "./rail.js";
 import { serializeResult, type RailResult } from "./result.js";
+import { runSkillsCommand } from "./skills.js";
 
 export interface CliIo {
   readonly argv: readonly string[];
@@ -93,6 +94,9 @@ async function runCommand(
   try {
     if (name === "validate") {
       return runValidateArtifactCli([...rest, ...profileArgs(options)], io);
+    }
+    if (name === "skills") {
+      return runSkillsCommand(options, io);
     }
     if (name.startsWith("figma ")) {
       return await runFigmaCommand(name, options, io);

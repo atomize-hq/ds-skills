@@ -48,10 +48,8 @@ const fileNames: Record<BaselineName, string> = {
 };
 
 /** Never writes. Fails when a required reference is absent. */
-export async function checkBaselines(
-  options: BaselineOptions,
-): Promise<BaselineResult> {
-  const { entries: captured, errors } = await captureAll(options);
+export function checkBaselines(options: BaselineOptions): BaselineResult {
+  const { entries: captured, errors } = captureAll(options);
   const outcomes: BaselineOutcome[] = [];
 
   for (const [name, data] of captured) {
@@ -83,11 +81,8 @@ export async function checkBaselines(
  * partial write leaves the reference set internally inconsistent, which is
  * worse than not writing at all — half a baseline still looks like a baseline.
  */
-export async function captureBaselines(
-  options: BaselineOptions,
-): Promise<BaselineResult> {
-  const { entries: captured, errors: captureErrors } =
-    await captureAll(options);
+export function captureBaselines(options: BaselineOptions): BaselineResult {
+  const { entries: captured, errors: captureErrors } = captureAll(options);
   const outDir = path.resolve(options.outDir);
   const planned: Array<{
     name: BaselineName;
@@ -148,11 +143,11 @@ export async function captureBaselines(
   return { ok: captureErrors.length === 0, outcomes, errors: captureErrors };
 }
 
-async function captureAll(options: BaselineOptions): Promise<{
+function captureAll(options: BaselineOptions): {
   entries: Array<[BaselineName, Record<string, unknown>]>;
   errors: string[];
-}> {
-  const manifest = await captureManifest(options);
+} {
+  const manifest = captureManifest(options);
   return {
     entries: [
       ["plugin-manifest", manifest.data],
@@ -167,16 +162,16 @@ async function captureAll(options: BaselineOptions): Promise<{
  * field, so it is recorded literally: nothing is excluded, and the comparison
  * stays byte-for-byte rather than a comparison of a filtered subset.
  */
-async function captureManifest(options: BaselineOptions): Promise<{
+function captureManifest(options: BaselineOptions): {
   data: Record<string, unknown>;
   errors: string[];
-}> {
+} {
   const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "ds-skills-baseline-"));
   try {
     // Built into a scratch directory rather than read from a previous build:
     // capturing whatever happens to be on disk records a stale artifact as the
     // reference for the current one.
-    const { manifest } = await buildPlugin({
+    const { manifest } = buildPlugin({
       configPath: options.configPath,
       outDir: scratch,
       skipBundle: true,
