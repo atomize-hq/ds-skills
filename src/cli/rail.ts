@@ -30,6 +30,13 @@ export interface RailOptions {
   readonly profile?: string;
 }
 
+/**
+ * Reported when the publication binding did not hold. Deliberately not one of
+ * the three `ct8b-parity-*` codes: a broken binding is not a parity outcome,
+ * and re-running parity is not the remedy.
+ */
+export const railPublicationUnverified = "ct8b-publication-unverified";
+
 const emptyResult = {
   resultVersion: RESULT_VERSION,
   state: null,
@@ -86,23 +93,37 @@ export function ledgerValidate(options: RailOptions): RailResult {
     ),
   ];
 
+  // A ledger agrees with itself whatever the proof says, so the ledger-only
+  // projection answers `satisfied` for a publication binding that does not
+  // hold. The rail block is the one a status caller consumes *alone* — this
+  // function's contract — so the binding has to reach it, or the single
+  // consumer that opens neither record is told the rail is fine while the
+  // attestation it rests on is unverified. Same defect this command already
+  // refuses for an unreadable ledger; the binding was its surviving instance.
+  const unverified = binding.errors.length > 0;
+
   return {
     resultVersion: RESULT_VERSION,
     command: "ledger validate",
     // A conformance blocker is a reported state, not a failed validation:
     // `verified-stale` is a legitimate ledger. Only the binding can make an
     // otherwise-valid ledger nonconformant here.
-    ok: binding.errors.length === 0,
+    ok: !unverified,
+    // `state` stays the ledger's own: it describes the record, and the record
+    // really is what it says. `promotable` is a verdict, and no record with an
+    // unverified publication earns one.
     state: conformance.state,
-    promotable: conformance.promotable,
+    promotable: unverified ? false : conformance.promotable,
     ledgerPath: absPath,
     proofPath: binding.proofPath,
     diagnostics,
     evidence: conformance.evidence,
     rail: {
       freshness: status.freshness,
-      outcome: status.outcome,
-      reasonCodes: status.reasonCodes,
+      outcome: unverified ? "unsatisfied" : status.outcome,
+      reasonCodes: unverified
+        ? [railPublicationUnverified]
+        : status.reasonCodes,
       sourceVersionOrRevision: status.sourceVersionOrRevision,
     },
   };

@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { EXIT_NONCONFORMANT, EXIT_OK } from "./exit-codes.js";
 import {
   brokenBinding,
+  brokenSatisfiedBinding,
   capture,
   fixtures,
   ledgers,
@@ -56,6 +57,22 @@ describe("the status projection replaces reading the records", () => {
     expect(result.rail).toBeNull();
     expect(result.evidence).toBeNull();
     expect(result.diagnostics.length).toBeGreaterThan(0);
+  });
+
+  it("never reports a satisfied rail over a publication it could not verify", async () => {
+    // The ledger-only projection cannot see the binding, so on its own it calls
+    // this record satisfied. A status caller reads the rail block and nothing
+    // else, so that answer would be the whole of what it learns — the same
+    // defect as an unreadable ledger reported as a clean rail, one case later.
+    const { result } = await validateJson(brokenSatisfiedBinding);
+    expect(result.ok).toBe(false);
+    expect(result.rail.outcome).toBe("unsatisfied");
+    expect(result.rail.reasonCodes).toEqual(["ct8b-publication-unverified"]);
+    expect(result.promotable).toBe(false);
+    // Freshness and provenance still describe the ledger, which is readable and
+    // says what it says. Only the verdicts are withheld.
+    expect(result.rail.freshness).toBe("current");
+    expect(result.state).toBe("verified-current");
   });
 });
 

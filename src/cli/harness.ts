@@ -47,26 +47,31 @@ export async function validateJson(ledger: string, profile = profileA) {
 
 export let tmpDir: string;
 export let brokenBinding: string;
+export let brokenSatisfiedBinding: string;
 
-beforeAll(() => {
-  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "ds-skills-cli-"));
-  // A ledger whose bound proof has been edited since it was attested: the one
-  // way an otherwise-valid record becomes nonconformant, so exit 1 is reachable.
+/**
+ * A ledger whose bound proof has been edited since it was attested: the one way
+ * an otherwise-valid record becomes nonconformant, so exit 1 is reachable.
+ * Each pair gets its own directory, because the two fixtures name their proof
+ * the same thing and a shared one would have them overwrite each other.
+ */
+function makeBrokenBinding(stem: string): string {
+  const dir = fs.mkdtempSync(path.join(tmpDir, `${stem}-`));
   const proof = JSON.parse(
-    fs.readFileSync(path.join(ledgers, "valid.publish-proof.json"), "utf8"),
+    fs.readFileSync(path.join(ledgers, `${stem}.publish-proof.json`), "utf8"),
   );
   const ledger = JSON.parse(
-    fs.readFileSync(path.join(ledgers, "valid.sync-ledger.json"), "utf8"),
+    fs.readFileSync(path.join(ledgers, `${stem}.sync-ledger.json`), "utf8"),
   );
   // Named exactly as the ledger's binding names it: the point of this case is
   // an edited proof, not an unresolvable one, and those are different findings.
-  const proofPath = path.join(tmpDir, path.basename(ledger.publication.proof));
+  const proofPath = path.join(dir, path.basename(ledger.publication.proof));
   fs.writeFileSync(
     proofPath,
     `${JSON.stringify({ ...proof, materialization: { ...proof.materialization, attemptedAt: "2026-05-01T00:00:00Z" } }, null, 2)}\n`,
   );
-  brokenBinding = path.join(tmpDir, "sync-ledger.json");
-  fs.writeFileSync(brokenBinding, `${JSON.stringify(ledger, null, 2)}\n`);
+  const ledgerPath = path.join(dir, "sync-ledger.json");
+  fs.writeFileSync(ledgerPath, `${JSON.stringify(ledger, null, 2)}\n`);
   // The ledger keeps the original digest, so the binding no longer resolves to
   // the record it names.
   expect(
@@ -75,6 +80,15 @@ beforeAll(() => {
       .update(fs.readFileSync(proofPath))
       .digest("hex"),
   ).not.toBe(ledger.publication.sha256);
+  return ledgerPath;
+}
+
+beforeAll(() => {
+  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "ds-skills-cli-"));
+  brokenBinding = makeBrokenBinding("valid");
+  // The sharp case: required parity at E-promotion-complete, so the ledger-only
+  // projection would answer `satisfied` with no reason code at all.
+  brokenSatisfiedBinding = makeBrokenBinding("valid-required");
 });
 
 afterAll(() => {
