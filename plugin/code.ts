@@ -30,7 +30,19 @@ const themeOptions = {
 
 figma.showUI(__html__, { width: 420, height: 560 });
 
-figma.ui.onmessage = async (msg: UiToPluginMessage) => {
+/**
+ * Figma's `onmessage` slot expects a void return, so an async handler's
+ * rejection is unhandled — and in the plugin runtime an unhandled rejection is
+ * silent, which shows up as the plugin simply doing nothing. Every branch below
+ * catches its own errors; this wrapper is for the ones that do not exist yet.
+ */
+figma.ui.onmessage = (msg: UiToPluginMessage) => {
+  void handleMessage(msg).catch((error: unknown) => {
+    figma.notify(`Plugin error: ${messageForError(error)}`, { error: true });
+  });
+};
+
+async function handleMessage(msg: UiToPluginMessage): Promise<void> {
   if (!msg || typeof msg.type !== "string") return;
 
   if (msg.type === "UI_READY") {
@@ -144,7 +156,7 @@ figma.ui.onmessage = async (msg: UiToPluginMessage) => {
     }
     return;
   }
-};
+}
 
 /**
  * Upsert semantics: preserve the collection and existing VariableIDs so that
@@ -184,6 +196,7 @@ async function applyExpectedVariables(expected: ExpectedVariableSet) {
       // confusing failure to hit without an explicit explanation.
       throw new Error(
         `Could not add a mode for theme "${themeId}": ${messageForError(error)}. Figma limits modes per collection by plan tier.`,
+        { cause: error },
       );
     }
   }

@@ -188,3 +188,35 @@ describe("no automated gate re-captures its own expectations", () => {
     }
   });
 });
+
+describe("one implementation of each structural rule", () => {
+  it("has no validator carrying its own copy of the shared primitives", () => {
+    // They were separate copies in the two record validators, differing only in
+    // the diagnostic prefix — two implementations of one rule, with nothing
+    // checking they agreed. A re-introduced copy is how they drift again.
+    const offenders: string[] = [];
+    for (const name of ["sync-ledger-shape.mjs", "publish-proof.mjs"]) {
+      const text = fs.readFileSync(path.join(here, name), "utf8");
+      for (const primitive of [
+        "validateKeySpec",
+        "requireLiteral",
+        "requireNonEmptyString",
+      ]) {
+        if (new RegExp(`function ${primitive}\\(`).test(text)) {
+          offenders.push(`${name} defines ${primitive}`);
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it("refuses a diagnostic prefix it does not recognize", async () => {
+    // Otherwise a missed call site emits `[undefined_INVALID_LITERAL]` — a code
+    // no consumer will ever match, from a check that looks like it ran. Five
+    // call sites were missed on the first pass; this is what found them.
+    const { requireLiteral } = await import("./validation-primitives.mjs");
+    expect(() => requireLiteral([], "a", "b", "x", undefined)).toThrow(
+      /diagnostic prefix/,
+    );
+  });
+});

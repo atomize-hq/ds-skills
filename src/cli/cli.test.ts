@@ -22,7 +22,7 @@ async function capture(argv: readonly string[]) {
 }
 
 describe("command registry", () => {
-  it("carries all nine commands, including the four the inventory found", async () => {
+  it("carries all nine commands, including the four the inventory found", () => {
     const names = commands.map((c) => c.path.join(" "));
     expect(names).toHaveLength(9);
     // The four that were discovered rather than designed. Losing one means the
@@ -33,7 +33,7 @@ describe("command registry", () => {
     expect(names).toContain("figma baseline");
   });
 
-  it("matches the longest command path, not the first prefix", async () => {
+  it("matches the longest command path, not the first prefix", () => {
     expect(matchCommand(["figma", "plugin", "build"])?.path).toEqual([
       "figma",
       "plugin",
@@ -46,7 +46,7 @@ describe("command registry", () => {
     expect(matchCommand(["figma"])).toBeUndefined();
   });
 
-  it("keeps parity independently invocable rather than folded into validate", async () => {
+  it("keeps parity independently invocable rather than folded into validate", () => {
     const parity = matchCommand(["ledger", "parity"]);
     const validate = matchCommand(["ledger", "validate"]);
     expect(parity).toBeDefined();
@@ -124,7 +124,7 @@ describe("failure behaviour", () => {
     expect(err).toContain("[CLI_JSON_UNSUPPORTED]");
   });
 
-  it("accepts --json on every machine-readable command", async () => {
+  it("accepts --json on every machine-readable command", () => {
     for (const command of commands.filter((c) => c.machineReadable)) {
       const parsed = parseArgv([...command.path, "--json"]);
       expect(parsed.kind).toBe("command");
@@ -133,7 +133,7 @@ describe("failure behaviour", () => {
 });
 
 describe("the exit-code contract", () => {
-  it("distinguishes an answer from the absence of one", async () => {
+  it("distinguishes an answer from the absence of one", () => {
     // 0 and 1 are evaluations; 2 and 3 are not. A caller that cannot tell them
     // apart eventually reports a missing tool as a clean bill of health.
     expect(emitsMachineResult(0)).toBe(true);

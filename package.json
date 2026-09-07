@@ -46,10 +46,12 @@
     "test:watch": "vitest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "pnpm format:check && pnpm typecheck && pnpm test && pnpm build && pnpm smoke && pnpm pack-check",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm loc && pnpm test && pnpm build && pnpm smoke && pnpm pack-check",
     "prepare": "pnpm build",
     "smoke": "node --input-type=module -e \"import('./dist/index.js').then(m=>{if(typeof m.flattenTokenDocument!=='function'||typeof m.buildExpectedVariables!=='function')throw new Error('built package does not expose its API');console.log('smoke ok')})\"",
-    "pack-check": "bash scripts/pack-check.sh"
+    "pack-check": "bash scripts/pack-check.sh",
+    "lint": "eslint .",
+    "loc": "tokei --files --output json src plugin bin scripts | node scripts/validate-loc.mjs 300"
   },
   "peerDependencies": {
     "esbuild": ">=0.20.0"
@@ -60,11 +62,14 @@
     }
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@figma/plugin-typings": "^1.112.0",
     "@types/node": "^25.5.0",
     "esbuild": "^0.25.9",
+    "eslint": "^10.10.0",
     "prettier": "3.8.1",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.69.0",
     "vitest": "4.1.0"
   }
 }

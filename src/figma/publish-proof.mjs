@@ -2,6 +2,13 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { CannotEvaluateError, portablePublishModes } from "./profile.mjs";
+import {
+  assertPlainObject,
+  PROOF_CODES,
+  requireLiteral,
+  requireNonEmptyString,
+  validateKeySpec,
+} from "./validation-primitives.mjs";
 
 export const publishProofUsage =
   "Usage: ds-skills proof validate --proof <path> --profile <path>";
@@ -81,8 +88,9 @@ export function validatePublishProof(data, profile) {
       optional: [],
     },
     "publishProof",
+    PROOF_CODES,
   );
-  requireLiteral(errors, data.proofVersion, "1", "proofVersion");
+  requireLiteral(errors, data.proofVersion, "1", "proofVersion", PROOF_CODES);
 
   if (!profile.publishModes.includes(data.mode)) {
     errors.push(
@@ -108,8 +116,15 @@ function validateArtifact(errors, artifact, profile) {
     artifact,
     { required: ["path", "gitSha"], optional: [] },
     "artifact",
+    PROOF_CODES,
   );
-  requireLiteral(errors, artifact.path, profile.artifactPath, "artifact.path");
+  requireLiteral(
+    errors,
+    artifact.path,
+    profile.artifactPath,
+    "artifact.path",
+    PROOF_CODES,
+  );
 
   if (
     typeof artifact.gitSha !== "string" ||
@@ -133,18 +148,21 @@ function validateDestination(errors, destination, profile) {
     destination,
     { required: ["name", "figmaFile"], optional: [] },
     "destination",
+    PROOF_CODES,
   );
   requireLiteral(
     errors,
     destination.name,
     profile.destinationName,
     "destination.name",
+    PROOF_CODES,
   );
   requireLiteral(
     errors,
     destination.figmaFile,
     profile.destinationFigmaFile,
     "destination.figmaFile",
+    PROOF_CODES,
   );
 }
 
@@ -169,6 +187,7 @@ function validateMaterialization(errors, materialization) {
     materialization,
     materializationKeySpec,
     "materialization",
+    PROOF_CODES,
   );
 
   if (!materializationStatuses.has(materialization.status)) {
@@ -217,6 +236,7 @@ function validateCarrier(errors, carrier, mode) {
     carrier,
     { required: ["used", "reason", "exitExpectation"], optional: [] },
     "carrier",
+    PROOF_CODES,
   );
 
   if (typeof carrier.used !== "boolean") {
@@ -227,11 +247,17 @@ function validateCarrier(errors, carrier, mode) {
   }
 
   if (carrier.used) {
-    requireNonEmptyString(errors, carrier.reason, "carrier.reason");
+    requireNonEmptyString(
+      errors,
+      carrier.reason,
+      "carrier.reason",
+      PROOF_CODES,
+    );
     requireNonEmptyString(
       errors,
       carrier.exitExpectation,
       "carrier.exitExpectation",
+      PROOF_CODES,
     );
 
     if (mode !== "tokens-studio-carried") {
@@ -272,56 +298,4 @@ function requireProfile(profile) {
       "validatePublishProof requires a resolved profile; see readProfile()",
     );
   }
-}
-
-function assertPlainObject(errors, value, message) {
-  if (!isPlainObject(value)) {
-    errors.push(message);
-    return false;
-  }
-
-  return true;
-}
-
-function validateKeySpec(errors, value, keySpec, label) {
-  const requiredKeys = [...keySpec.required].sort();
-  const optionalKeys = [...(keySpec.optional ?? [])].sort();
-  const allowedKeys = [...requiredKeys, ...optionalKeys].sort();
-  const actualKeys = Object.keys(value).sort();
-
-  for (const key of requiredKeys) {
-    if (!actualKeys.includes(key)) {
-      errors.push(
-        `[CT-7B_PUBLISH_PROOF_MISSING_REQUIRED_KEY] ${label}.${key} is required`,
-      );
-    }
-  }
-
-  for (const key of actualKeys) {
-    if (!allowedKeys.includes(key)) {
-      errors.push(
-        `[CT-7B_PUBLISH_PROOF_UNEXPECTED_KEY] ${label}.${key} is not allowed`,
-      );
-    }
-  }
-}
-
-function requireLiteral(errors, actual, expected, label) {
-  if (actual !== expected) {
-    errors.push(
-      `[CT-7B_PUBLISH_PROOF_INVALID_LITERAL] ${label} must be ${expected}`,
-    );
-  }
-}
-
-function requireNonEmptyString(errors, actual, label) {
-  if (typeof actual !== "string" || actual.length === 0) {
-    errors.push(
-      `[CT-7B_PUBLISH_PROOF_INVALID_STRING] ${label} must be a non-empty string`,
-    );
-  }
-}
-
-function isPlainObject(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
