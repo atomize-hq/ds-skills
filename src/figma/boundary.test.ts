@@ -147,3 +147,44 @@ describe("the package discloses no consumer's identity", () => {
     expect(offenders).toEqual([]);
   });
 });
+
+describe("no automated gate re-captures its own expectations", () => {
+  it("passes --force from no script, skill or executable", () => {
+    // A gate that can rewrite the reference it checks against is not a gate,
+    // and a manual demonstration that --force works is not a substitute for
+    // this: --force exists for a human making a deliberate, reviewed change.
+    //
+    // Scoped to the things that RUN unattended. The parser has to know the
+    // flag and the implementation has to implement it; neither is a gate, and
+    // exempting them one by one would grow a list that eventually hides a real
+    // offender.
+    const root = path.resolve(here, "../..");
+    const offenders: string[] = [];
+    for (const dir of ["scripts", "skills", "bin"]) {
+      const full = path.join(root, dir);
+      if (!fs.existsSync(full)) continue;
+      const stack = [full];
+      while (stack.length > 0) {
+        const current = stack.pop()!;
+        for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+          const file = path.join(current, entry.name);
+          if (entry.isDirectory()) {
+            stack.push(file);
+            continue;
+          }
+          if (/--force/.test(fs.readFileSync(file, "utf8"))) {
+            offenders.push(path.relative(root, file));
+          }
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it("has those directories to search, so the check cannot be vacuous", () => {
+    const root = path.resolve(here, "../..");
+    for (const dir of ["scripts", "skills", "bin"]) {
+      expect(fs.existsSync(path.join(root, dir)), dir).toBe(true);
+    }
+  });
+});

@@ -31,8 +31,14 @@ export interface TokenServer {
   readonly artifactUrlPath: string;
   readonly driftReportUrlPath: string;
   readonly port: number;
+  /** Every address this server bound. Loopback only, and checkable as such. */
+  readonly hosts: readonly string[];
   close(): Promise<void>;
 }
+
+/** The only addresses this server may bind. Never 0.0.0.0 — it serves a
+ * development artifact and has no business being reachable off the machine. */
+export const loopbackHosts = ["127.0.0.1", "::1"] as const;
 
 export const driftReportUrlPath = "/figma/drift-report";
 
@@ -76,12 +82,14 @@ export async function startTokenServer(
   const handler = createHandler({ ...options, artifactPath }, artifactUrlPath);
 
   // Bound explicitly to loopback, both families: some environments resolve
-  // `localhost` to ::1. Never 0.0.0.0 — this serves a development artifact and
-  // has no business being reachable off the machine.
+  // `localhost` to ::1.
   const servers = [http.createServer(handler), http.createServer(handler)];
-  await listen(servers[0]!, port, "127.0.0.1");
+  const hosts: string[] = [];
+  await listen(servers[0]!, port, loopbackHosts[0]);
+  hosts.push(loopbackHosts[0]);
   try {
-    await listen(servers[1]!, port, "::1");
+    await listen(servers[1]!, port, loopbackHosts[1]);
+    hosts.push(loopbackHosts[1]);
   } catch {
     // No IPv6 loopback here; the IPv4 listener is the one that matters.
     servers.pop();
@@ -91,6 +99,7 @@ export async function startTokenServer(
     artifactUrlPath,
     driftReportUrlPath,
     port,
+    hosts,
     close: async () => {
       await Promise.all(
         servers.map(

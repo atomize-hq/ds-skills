@@ -11,6 +11,7 @@ import { CannotEvaluateError } from "./profile.mjs";
 import {
   artifactUrlPathFor,
   driftReportUrlPath,
+  loopbackHosts,
   readServeConfig,
   startTokenServer,
   type TokenServer,
@@ -198,5 +199,19 @@ describe("startup and shutdown", () => {
         artifactPath: path.join(tmpDir, "absent.json"),
       }),
     ).rejects.toThrow(CannotEvaluateError);
+  });
+});
+
+describe("the bind surface", () => {
+  it("binds loopback only, never a wildcard address", async () => {
+    // Stated as a checkable contract rather than a comment: this serves a
+    // development artifact, and a wildcard bind puts a repo's tokens on the
+    // network of whatever café the developer is sitting in.
+    const configPath = writeConfig();
+    server = await startTokenServer({ configPath, artifactPath });
+
+    expect(server.hosts.length).toBeGreaterThan(0);
+    for (const host of server.hosts) expect(loopbackHosts).toContain(host);
+    expect(server.hosts).not.toContain("0.0.0.0");
   });
 });

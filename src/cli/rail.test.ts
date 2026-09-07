@@ -354,3 +354,39 @@ describe("diagnostics say which evaluation produced them", () => {
     ).toBe(true);
   });
 });
+
+describe("a long-running command keeps stdout clean", () => {
+  it("reports readiness on stderr, not stdout", async () => {
+    // stdout belongs to whatever a caller might parse. A readiness banner there
+    // is the same defect as a log line in a --json result, one command later.
+    const { runFigmaCommand } = await import("./figma.js");
+    let out = "";
+    let err = "";
+    const io = {
+      stdout: { write: (chunk: string) => (out += chunk) },
+      stderr: { write: (chunk: string) => (err += chunk) },
+    };
+    const config = path.join(
+      fileURLToPath(new URL("../../", import.meta.url)),
+      "ds-skills.config.example.json",
+    );
+    const artifact = path.join(
+      fileURLToPath(new URL("../../", import.meta.url)),
+      "src/__fixtures__/artifact.json",
+    );
+
+    const running = runFigmaCommand(
+      "figma serve",
+      { config, artifact, port: "0" },
+      io,
+    );
+    // The command resolves only on a stop signal; readiness has already been
+    // written by the time the listener is up.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    process.emit("SIGINT");
+    await running;
+
+    expect(err).toContain("[RAIL_SERVE_READY]");
+    expect(out).toBe("");
+  });
+});
