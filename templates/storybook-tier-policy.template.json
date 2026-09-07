@@ -1,0 +1,53 @@
+{
+  "policyVersion": "1",
+  "tierOrder": ["primitive", "interactive", "workflow"],
+  "tiers": {
+    "primitive": {
+      "minimumRequiredKinds": [
+        {
+          "kind": "default",
+          "purpose": "Baseline proof that the component renders at all."
+        },
+        { "kind": "docs", "purpose": "Reviewer-visible contract surface." }
+      ],
+      "defaultOptionalKinds": ["variant-matrix", "state-matrix", "responsive"],
+      "consumerScope": ["THR-02"]
+    },
+    "interactive": {
+      "minimumRequiredKinds": [
+        {
+          "kind": "default",
+          "purpose": "Baseline proof that the component renders at all."
+        },
+        { "kind": "docs", "purpose": "Reviewer-visible contract surface." },
+        {
+          "kind": "actions",
+          "purpose": "Emitted events must be visible, not inferred from source."
+        }
+      ],
+      "defaultOptionalKinds": [
+        "variant-matrix",
+        "state-matrix",
+        "controlled",
+        "keyboard",
+        "focus"
+      ],
+      "consumerScope": ["THR-02"]
+    },
+    "workflow": {
+      "minimumRequiredKinds": [
+        {
+          "kind": "default",
+          "purpose": "Baseline proof that the component renders at all."
+        },
+        { "kind": "docs", "purpose": "Reviewer-visible contract surface." },
+        {
+          "kind": "workflow",
+          "purpose": "A multi-step path is only proven by replaying it."
+        }
+      ],
+      "defaultOptionalKinds": ["actions", "controlled", "motion", "async"],
+      "consumerScope": ["THR-02"]
+    }
+  }
+}

@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ds-skills.local/schemas/sync-ledger.schema.json",
+  "title": "Sync Ledger (v2)",
+  "description": "One ledger per repo recording the state of the token->Figma publish rail: which artifact revision was published, by which rail, whether it was verified, and how far it has been promoted. Replaces the v1 per-component scope/name/links/status/drift shape, which is retired along with its codeConnect field.",
+  "type": "object",
+  "required": [
+    "ledgerVersion",
+    "artifact",
+    "publish",
+    "verification",
+    "promotion",
+    "exceptions"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "ledgerVersion": { "const": "2" },
+    "artifact": {
+      "type": "object",
+      "description": "The generated artifact this ledger tracks.",
+      "required": ["path", "revision"],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "x-repo-profile": "artifact-path",
+          "description": "REPO PROFILE. The repo's canonical published artifact. A consumer pins this to one literal in its profile and the validator enforces it; the schema keeps it an open string so the package ports. See profiles/example.json."
+        },
+        "revision": { "$ref": "#/$defs/sha" }
+      }
+    },
+    "publish": {
+      "type": "object",
+      "required": ["mode", "tokensStudioCarrier", "figmaFile"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "x-repo-profile": "publish-modes",
+          "enum": ["plugin-import-manual", "tokens-studio-carried"],
+          "description": "REPO PROFILE. Which rail actually moved the artifact into Figma. Extend this enum per repo."
+        },
+        "tokensStudioCarrier": { "type": "boolean" },
+        "figmaFile": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "description": "tokensStudioCarrier is true if and only if mode is tokens-studio-carried.",
+          "if": {
+            "properties": { "mode": { "const": "tokens-studio-carried" } },
+            "required": ["mode"]
+          },
+          "then": {
+            "properties": { "tokensStudioCarrier": { "const": true } }
+          },
+          "else": {
+            "properties": { "tokensStudioCarrier": { "const": false } }
+          }
+        }
+      ]
+    },
+    "verification": {
+      "type": "object",
+      "required": ["materializationStatus", "lastVerifiedRevision"],
+      "additionalProperties": false,
+      "properties": {
+        "materializationStatus": {
+          "type": "string",
+          "enum": ["not-run", "passed", "failed"]
+        },
+        "lastVerifiedRevision": {
+          "oneOf": [{ "$ref": "#/$defs/sha" }, { "type": "null" }]
+        }
+      },
+      "allOf": [
+        {
+          "description": "lastVerifiedRevision must be null when the check has not run, and a sha otherwise.",
+          "if": {
+            "properties": { "materializationStatus": { "const": "not-run" } },
+            "required": ["materializationStatus"]
+          },
+          "then": {
+            "properties": { "lastVerifiedRevision": { "type": "null" } }
+          },
+          "else": {
+            "properties": { "lastVerifiedRevision": { "$ref": "#/$defs/sha" } }
+          }
+        }
+      ]
+    },
+    "promotion": {
+      "type": "object",
+      "required": ["parityMode", "highestEarnedLevel"],
+      "additionalProperties": false,
+      "properties": {
+        "parityMode": { "type": "string", "enum": ["deferred", "required"] },
+        "highestEarnedLevel": {
+          "type": "string",
+          "x-repo-profile": "promotion-levels",
+          "enum": [
+            "A-source-valid",
+            "B-projection-valid",
+            "C-consumption-valid",
+            "D-publish-valid",
+            "E-promotion-complete"
+          ],
+          "description": "REPO PROFILE. The promotion ladder. The A->E shape is the portable idea; the rung names are the repo's."
+        },
+        "parityDeferredReason": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "description": "A deferred parity mode must carry its reason; a required one must not.",
+          "if": {
+            "properties": { "parityMode": { "const": "deferred" } },
+            "required": ["parityMode"]
+          },
+          "then": { "required": ["parityDeferredReason"] },
+          "else": {
+            "not": { "required": ["parityDeferredReason"] }
+          }
+        }
+      ]
+    },
+    "exceptions": {
+      "type": "array",
+      "description": "Open or resolved deviations. An open blocking exception stops promotion.",
+      "items": { "$ref": "#/$defs/exception" }
+    }
+  },
+  "$defs": {
+    "sha": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$",
+      "description": "Full 40-character lowercase git sha."
+    },
+    "exception": {
+      "type": "object",
+      "required": ["code", "message", "blocking", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "blocking": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["open", "resolved"] },
+        "field": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

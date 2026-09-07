@@ -1,0 +1,13 @@
+{
+  "planVersion": "2.0.0",
+  "feature": "settings-panel",
+  "routes": [],
+  "organisms": [],
+  "layouts": [],
+  "stories": [],
+  "workflowStories": [],
+  "responsiveStories": [],
+  "nativeBoundaries": [],
+  "capturePlan": [],
+  "tasks": []
+}

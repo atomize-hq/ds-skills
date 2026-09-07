@@ -31,6 +31,9 @@
     "dist",
     "src",
     "plugin",
+    "schemas",
+    "templates",
+    "profiles",
     "README.md"
   ],
   "packageManager": "pnpm@10.11.1",

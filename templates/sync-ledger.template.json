@@ -1,0 +1,22 @@
+{
+  "ledgerVersion": "2",
+  "artifact": {
+    "path": "design-tokens/dist/figma/tokens.json",
+    "revision": "0000000000000000000000000000000000000000"
+  },
+  "publish": {
+    "mode": "plugin-import-manual",
+    "tokensStudioCarrier": false,
+    "figmaFile": "figma://file/REPLACE_WITH_FILE_KEY"
+  },
+  "verification": {
+    "materializationStatus": "not-run",
+    "lastVerifiedRevision": null
+  },
+  "promotion": {
+    "parityMode": "deferred",
+    "parityDeferredReason": "No parity comparison has been run against the published file yet.",
+    "highestEarnedLevel": "A-source-valid"
+  },
+  "exceptions": []
+}

@@ -1,0 +1,23 @@
+{
+  "specVersion": "1",
+  "componentId": "button",
+  "tier": "primitive",
+  "requiredStoryKinds": ["default", "variant-matrix", "docs"],
+  "ownedStoryRefs": [
+    { "storyId": "ui-button--default", "kinds": ["default"] },
+    { "storyId": "ui-button--variant-matrix", "kinds": ["variant-matrix"] },
+    { "storyId": "ui-button--docs", "kinds": ["docs"] }
+  ],
+  "generatedArtifactRefs": {
+    "tokenDocs": null,
+    "recipeDocs": null,
+    "runtimeParity": null
+  },
+  "downstreamHooks": {
+    "codeEntrypoint": "src/components/ui/button.tsx",
+    "figmaComponentRef": null,
+    "supportedVariantsSource": null,
+    "slotNamesSource": null,
+    "exampleStoryIds": ["ui-button--default"]
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ds-skills.local/schemas/storybook-story-inventory.schema.json",
+  "title": "Storybook Story Inventory",
+  "description": "Repo-wide registry of which validator kinds each component has actually implemented as stories. One file per repo, not one per component. Portable: the storyKind vocabulary in $defs is the skill pack's contribution and is not repo-specific.",
+  "type": "object",
+  "required": ["inventoryVersion", "components"],
+  "additionalProperties": false,
+  "properties": {
+    "inventoryVersion": {
+      "const": "1",
+      "description": "Literal. Bump only alongside a validator change."
+    },
+    "components": {
+      "type": "array",
+      "description": "One entry per component that owns stories. componentId must be unique across the array.",
+      "items": { "$ref": "#/$defs/componentEntry" }
+    }
+  },
+  "$defs": {
+    "storyKind": {
+      "description": "Canonical story-kind vocabulary. Order matters: validatorKinds must appear in this order.",
+      "type": "string",
+      "enum": [
+        "default",
+        "variant-matrix",
+        "state-matrix",
+        "actions",
+        "controlled",
+        "keyboard",
+        "focus",
+        "workflow",
+        "motion",
+        "async",
+        "docs",
+        "responsive",
+        "composition"
+      ]
+    },
+    "componentEntry": {
+      "type": "object",
+      "required": ["componentId", "validatorKinds", "implementedStoryRefs"],
+      "additionalProperties": false,
+      "properties": {
+        "componentId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Must match the stem of the component-spec filename that owns this component."
+        },
+        "validatorKinds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/storyKind" },
+          "description": "Kinds this component claims. Must be in canonical $defs/storyKind order — an ordering rule JSON Schema cannot express, enforced by the validator."
+        },
+        "implementedStoryRefs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/storyRef" },
+          "description": "Concrete story IDs backing each claimed kind. The set of .kind values must equal validatorKinds exactly — a cross-field rule JSON Schema cannot express, enforced by the validator."
+        }
+      }
+    },
+    "storyRef": {
+      "type": "object",
+      "required": ["kind", "storyId"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "$ref": "#/$defs/storyKind" },
+        "storyId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Storybook story ID, e.g. \"ai-elements-message--default\"."
+        }
+      }
+    }
+  }
+}

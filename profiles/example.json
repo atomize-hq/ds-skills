@@ -1,0 +1,39 @@
+{
+  "$comment": "A worked example of the x-repo-profile extension points in ../schemas. A consumer writes its own file like this one and changes nothing in schemas/ — that is the whole portability contract. Deliberately not any real consumer's profile: shipping one repo's vocabulary from a portable package is the coupling this package exists to remove.",
+
+  "artifact-path": {
+    "const": "dist/tokens.json"
+  },
+
+  "publish-modes": {
+    "enum": ["plugin-import-manual", "tokens-studio-carried"],
+    "description": "The portable schema fixes the shape; a consumer narrows the set it actually uses. It may only ever narrow — a profile cannot introduce a mode the portable enum does not carry, and cannot re-enable a retired one."
+  },
+
+  "promotion-levels": {
+    "enum": [
+      "A-source-valid",
+      "B-projection-valid",
+      "C-consumption-valid",
+      "D-publish-valid",
+      "E-promotion-complete"
+    ]
+  },
+
+  "tier-policy": {
+    "enum": ["primitive", "composite"],
+    "description": "Deliberately a different tier set from any real consumer's, so a test using this profile fails if the validator has a consumer's vocabulary baked in rather than reading it from here."
+  },
+
+  "tier-names": {
+    "items": { "enum": ["primitive", "composite"] }
+  },
+
+  "consumer-ids": {
+    "items": { "type": "string", "pattern": "^EX-[0-9]{3}$" }
+  },
+
+  "generated-artifacts": {
+    "description": "Whatever generated proof surfaces the consumer's specs point at."
+  }
+}

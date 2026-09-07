@@ -1,0 +1,14 @@
+{
+  "inventoryVersion": "1",
+  "components": [
+    {
+      "componentId": "button",
+      "validatorKinds": ["default", "variant-matrix", "docs"],
+      "implementedStoryRefs": [
+        { "kind": "default", "storyId": "ui-button--default" },
+        { "kind": "variant-matrix", "storyId": "ui-button--variant-matrix" },
+        { "kind": "docs", "storyId": "ui-button--docs" }
+      ]
+    }
+  ]
+}

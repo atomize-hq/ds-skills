@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ds-skills.local/schemas/storybook-tier-policy.schema.json",
+  "title": "Storybook Component Tier Policy",
+  "description": "The repo profile that gives 'tier' its meaning. A component spec declares an open-string tier; this file declares which tiers exist, in what order of rigour, and the minimum story kinds each one owes. Porting the pack to a new repo means rewriting this file, not the schemas that reference it.",
+  "type": "object",
+  "required": ["policyVersion", "tierOrder", "tiers"],
+  "additionalProperties": false,
+  "properties": {
+    "policyVersion": { "const": "1" },
+    "tierOrder": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 },
+      "x-repo-profile": "tier-names",
+      "description": "REPO PROFILE. Tier names in ascending order of required rigour; a consumer supplies its own ladder in its profile. Every key in `tiers` must appear here, and vice versa — a cross-field rule enforced by the validator."
+    },
+    "tiers": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/tierEntry" },
+      "description": "Keyed by tier name. Keys must match tierOrder exactly."
+    }
+  },
+  "$defs": {
+    "storyKind": {
+      "type": "string",
+      "enum": [
+        "default",
+        "variant-matrix",
+        "state-matrix",
+        "actions",
+        "controlled",
+        "keyboard",
+        "focus",
+        "workflow",
+        "motion",
+        "async",
+        "docs",
+        "responsive",
+        "composition"
+      ]
+    },
+    "tierEntry": {
+      "type": "object",
+      "required": [
+        "minimumRequiredKinds",
+        "defaultOptionalKinds",
+        "consumerScope"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "minimumRequiredKinds": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/requiredKind" },
+          "description": "Every component at this tier must prove these. Each carries a purpose so the requirement is arguable rather than arbitrary."
+        },
+        "defaultOptionalKinds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/storyKind" },
+          "description": "Kinds a component at this tier may add. Must not overlap minimumRequiredKinds."
+        },
+        "consumerScope": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 },
+          "x-repo-profile": "consumer-ids",
+          "description": "REPO PROFILE. Identifiers for the downstream consumers that read this tier; a consumer supplies the pattern in its profile."
+        }
+      }
+    },
+    "requiredKind": {
+      "type": "object",
+      "required": ["kind", "purpose"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "$ref": "#/$defs/storyKind" },
+        "purpose": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Why this kind is mandatory at this tier. Prose, not a code."
+        }
+      }
+    }
+  }
+}

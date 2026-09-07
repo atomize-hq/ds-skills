@@ -41,4 +41,20 @@ set -e
 test "$code" -eq 2 || { echo "expected exit 2 from an unimplemented command, got $code" >&2; exit 1; }
 test -z "$out" || { echo "unimplemented command wrote to stdout: $out" >&2; exit 1; }
 
+# The shipped assets, checked in the INSTALLED package rather than by reading
+# the files field — a files entry naming a directory that does not ship still
+# looks correct in package.json.
+installed="$work/consumer/node_modules/@atomize-hq/ds-skills"
+for dir in schemas templates profiles; do
+  test -d "$installed/$dir" || { echo "$dir/ did not survive packing" >&2; exit 1; }
+done
+test -f "$installed/schemas/sync-ledger.schema.json"
+test -f "$installed/profiles/example.json"
+test -f "$installed/src/validate/artifact.mjs"
+
+# The portable schemas must not carry a consumer's namespace out into the world.
+if grep -rq 'collider' "$installed/schemas"; then
+  echo "installed schemas name a consumer" >&2; exit 1
+fi
+
 echo "pack check ok — installs, imports, builds the plugin, and runs the CLI as a consumer"
