@@ -96,6 +96,49 @@ describe("proof validate and ledger parity stay independently invocable", () => 
     expect(result.ledgerPath).toBeNull();
   });
 
+  it("refuses to affirm required parity over a publication it could not verify", async () => {
+    // Required parity affirms `E-promotion-complete`, and that rung is exactly
+    // what the binding's sufficiency check makes rest on the bound publication.
+    // Before this, `ledger parity` printed ✓ and exited 0 on the very records
+    // `ledger validate` rejects — the same defect, one command over.
+    const { code, out } = await capture([
+      "ledger",
+      "parity",
+      "--ledger",
+      brokenSatisfiedBinding,
+      "--profile",
+      profileA,
+      "--json",
+    ]);
+    expect(code).toBe(EXIT_NONCONFORMANT);
+    const result = JSON.parse(out);
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics.map((d: { code: string }) => d.code)).toContain(
+      "CT-8B_PUBLICATION_DIGEST_MISMATCH",
+    );
+    // Reported as parity, because that is the claim being withheld.
+    expect(
+      result.diagnostics.every((d: { phase: string }) => d.phase === "parity"),
+    ).toBe(true);
+  });
+
+  it("still answers a deferred parity, whose claim does not rest on the binding", async () => {
+    // The counterweight, and the reason this is not "any diagnostic fails every
+    // status": deferred parity affirms the deferral, not a rung of the ladder.
+    // `brokenBinding` is the deferred/D-publish-valid fixture.
+    const { code, out } = await capture([
+      "ledger",
+      "parity",
+      "--ledger",
+      brokenBinding,
+      "--profile",
+      profileA,
+      "--json",
+    ]);
+    expect(code).toBe(EXIT_OK);
+    expect(JSON.parse(out).ok).toBe(true);
+  });
+
   it("keeps parity a command of its own, not a side effect of validation", async () => {
     const { code, out } = await capture([
       "ledger",

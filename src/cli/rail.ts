@@ -133,16 +133,42 @@ export function ledgerValidate(options: RailOptions): RailResult {
 export function ledgerParity(options: RailOptions): RailResult {
   const profile = requireProfile(options.profile);
   const ledgerPath = requirePath(options.ledger, "--ledger");
-  const result = evaluateFigmaParity_(ledgerPath, profile);
+  const absPath = path.resolve(ledgerPath);
+  const { data, errors } = loadAndValidateSyncLedger(absPath, profile);
+
+  if (errors.length > 0) {
+    return {
+      ...emptyResult,
+      command: "ledger parity",
+      ok: false,
+      ledgerPath: absPath,
+      diagnostics: errors.map((line: string) =>
+        parseDiagnostic("parity", line),
+      ),
+    };
+  }
+
+  const result = evaluateFigmaParity(data);
+  // Required parity affirms `E-promotion-complete`, and the ladder's
+  // publish-valid rungs are exactly the ones publication-binding.mjs makes rest
+  // on the bound publication. So the binding is a prerequisite of THIS claim,
+  // not an unrelated failure being propagated onto it — which is why deferred
+  // parity is left alone: it affirms the deferral, not the level. Mirrors how
+  // the required branch already folds in conformance blockers.
+  const bindingErrors =
+    data.promotion.parityMode === "required"
+      ? checkPublicationBinding({ ledger: data, ledgerPath: absPath, profile })
+          .errors
+      : [];
 
   return {
     ...emptyResult,
     command: "ledger parity",
-    ok: result.ok,
+    ok: result.ok && bindingErrors.length === 0,
     state: result.state ?? null,
-    ledgerPath: path.resolve(ledgerPath),
-    diagnostics: (result.errors ?? []).map((line: string) =>
-      parseDiagnostic("parity", line),
+    ledgerPath: absPath,
+    diagnostics: [...(result.errors ?? []), ...bindingErrors].map(
+      (line: string) => parseDiagnostic("parity", line),
     ),
   };
 }
@@ -160,19 +186,6 @@ export function proofValidate(options: RailOptions): RailResult {
     proofPath: absPath,
     diagnostics: errors.map((line: string) => parseDiagnostic("proof", line)),
   };
-}
-
-function evaluateFigmaParity_(
-  ledgerPath: string,
-  profile: ResolvedProfile,
-): {
-  ok: boolean;
-  state?: string;
-  errors?: string[];
-} {
-  const { data, errors } = loadAndValidateSyncLedger(ledgerPath, profile);
-  if (errors.length > 0) return { ok: false, errors };
-  return evaluateFigmaParity(data);
 }
 
 function requireProfile(target: string | undefined): ResolvedProfile {

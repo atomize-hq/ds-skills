@@ -118,6 +118,32 @@ fails 1 "a ledger whose bound proof was edited" "$cli" ledger validate \
   --ledger broken/sync-ledger.json --profile profile.json
 grep -q 'DIGEST_MISMATCH' "$dir/.err" ||
   { echo "$label: an edited proof was not reported as a digest mismatch"; cat "$dir/.err" >&2; exit 1; }
+# A correction is only real if it is in the bytes that ship. The ledger agrees
+# with itself whatever the proof says, so the rail block — the one a status
+# caller is contracted to read ALONE — must not answer `satisfied` for a binding
+# that does not hold. This consumer's ledger is required/E-promotion-complete,
+# so it is a ledger that WOULD report satisfied; asserting it against a deferred
+# one would pass with or without the fix.
+fails 1 "a broken binding asked for its rail projection" "$cli" ledger validate \
+  --ledger broken/sync-ledger.json --profile profile.json --json
+node -e '
+  const r = JSON.parse(process.argv[1]);
+  if (r.ok !== false) throw new Error("a broken binding reported ok");
+  if (r.rail.outcome !== "unsatisfied")
+    throw new Error(`the rail block reports ${r.rail.outcome} for an unverified publication`);
+  if (!r.rail.reasonCodes.includes("ct8b-publication-unverified"))
+    throw new Error(`rail reasonCodes did not name it: ${JSON.stringify(r.rail.reasonCodes)}`);
+  if (r.promotable !== false) throw new Error("a broken binding reported promotable");
+' "$out"
+
+# The sibling command makes the same affirmative claim from one record. This
+# consumer's parity is `required`, so it affirms E-promotion-complete — the rung
+# the binding's sufficiency check rests on the bound publication.
+fails 1 "required parity over an unverified publication" "$cli" ledger parity \
+  --ledger broken/sync-ledger.json --profile profile.json
+grep -q 'DIGEST_MISMATCH' "$dir/.err" ||
+  { echo "$label: parity did not report the unverified publication"; cat "$dir/.err" >&2; exit 1; }
+
 fails 2 "a ledger that is not there" "$cli" ledger validate \
   --ledger absent.json --profile profile.json
 fails 2 "a ledger with no profile" "$cli" ledger validate --ledger sync-ledger.json
