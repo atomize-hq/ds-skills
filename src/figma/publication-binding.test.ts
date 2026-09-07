@@ -153,6 +153,34 @@ describe("the binding resolves one exact record", () => {
   });
 });
 
+describe("identity — the binding names these records, not merely valid ones", () => {
+  it("rejects a proof that agrees on every shared fact but is not the attested one", () => {
+    // The one-factor counterexample: hold the status-producing record fixed and
+    // exchange only what it points at. The substitute is individually valid AND
+    // agrees on all six facts of §4 — it differs only in when the publication
+    // was attempted — so agreement cannot catch it and only the digest can.
+    // This is what makes the binding an identity rather than a location, and
+    // nothing else here varies exactly this one factor.
+    const a = buildPair({}, {});
+    const other = buildPair(
+      {},
+      {
+        materialization: { attemptedAt: "2026-05-01T00:00:00Z" },
+      },
+    );
+    expect(validateSyncLedger(a.ledger, profile)).toEqual([]);
+    expect(validatePublishProof(other.proof, profile)).toEqual([]);
+    // Its own pair still passes, so the substitute is a sound record, not a broken one.
+    expect(codes(other.ledger, other.ledgerPath)).toEqual([]);
+
+    // A's ledger, unchanged, with the other proof written where A's binding points.
+    fs.writeFileSync(a.proofPath, `${JSON.stringify(other.proof, null, 2)}\n`);
+    expect(codes(a.ledger, a.ledgerPath)).toEqual([
+      "CT-8B_PUBLICATION_DIGEST_MISMATCH",
+    ]);
+  });
+});
+
 describe("agreement — each record individually valid, shared claims disagreeing", () => {
   // The precondition that makes these cases meaningful: neither record is
   // rejected on its own, so only the cross-record check can catch them.
