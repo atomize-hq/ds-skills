@@ -308,3 +308,49 @@ describe("proof validate and ledger parity stay independently invocable", () => 
     expect(JSON.parse(out).state).toBe("verified-stale");
   });
 });
+
+describe("diagnostics say which evaluation produced them", () => {
+  it("distinguishes a malformed ledger from a proof that disagrees with a sound one", () => {
+    // Without a phase, a caller has to pattern-match on the code prefix to tell
+    // "this record is broken" from "these two records disagree" — two findings
+    // with very different remedies.
+    const malformed = validateJson(
+      path.join(ledgers, "invalid-deferred-complete.sync-ledger.json"),
+    );
+    expect(
+      malformed.result.diagnostics.map((d: { phase: string }) => d.phase),
+    ).toEqual(["ledger"]);
+
+    const disagreeing = validateJson(brokenBinding);
+    expect(
+      disagreeing.result.diagnostics.map((d: { phase: string }) => d.phase),
+    ).toEqual(["publication"]);
+  });
+
+  it("marks a reported conformance blocker as conformance, not as a defect", () => {
+    const { result } = validateJson(
+      path.join(ledgers, "stale.sync-ledger.json"),
+    );
+    expect(result.diagnostics[0].phase).toBe("conformance");
+  });
+
+  it("marks a standalone proof failure as proof", () => {
+    const { code, out } = capture([
+      "proof",
+      "validate",
+      "--proof",
+      path.join(
+        fixtures,
+        "publish-proof/invalid-carrier-metadata.publish-proof.json",
+      ),
+      "--profile",
+      profileA,
+      "--json",
+    ]);
+    expect(code).toBe(EXIT_NONCONFORMANT);
+    const result = JSON.parse(out);
+    expect(
+      result.diagnostics.every((d: { phase: string }) => d.phase === "proof"),
+    ).toBe(true);
+  });
+});

@@ -8,7 +8,20 @@
  */
 export const RESULT_VERSION = "1";
 
+/**
+ * `phase` says which evaluation produced the finding, so a caller can tell a
+ * malformed ledger from a proof that disagrees with a well-formed one without
+ * pattern-matching on the code.
+ */
+export type DiagnosticPhase =
+  | "ledger"
+  | "publication"
+  | "proof"
+  | "parity"
+  | "conformance";
+
 export interface Diagnostic {
+  readonly phase: DiagnosticPhase;
   readonly code: string;
   readonly field?: string;
   readonly message: string;
@@ -55,15 +68,20 @@ const fieldRoots = [
  * Splits `[CODE] message` into its parts. The bare identifier is the interface;
  * the bracket punctuation is human formatting the CLI keeps for stderr.
  */
-export function parseDiagnostic(line: string): Diagnostic {
+export function parseDiagnostic(
+  phase: DiagnosticPhase,
+  line: string,
+): Diagnostic {
   const match = /^\[([A-Za-z0-9_.-]+)\]\s*(.*)$/s.exec(line);
   if (match === null) {
-    return { code: "UNCODED_DIAGNOSTIC", message: line };
+    return { phase, code: "UNCODED_DIAGNOSTIC", message: line };
   }
 
   const [, code, message] = match as unknown as [string, string, string];
   const field = detectField(message);
-  return field === undefined ? { code, message } : { code, field, message };
+  return field === undefined
+    ? { phase, code, message }
+    : { phase, code, field, message };
 }
 
 function detectField(message: string): string | undefined {

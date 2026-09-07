@@ -147,7 +147,7 @@ function emit(result: RailResult, json: boolean, io: Streams): number {
   const stream = result.ok ? io.stdout : io.stderr;
   for (const diagnostic of result.diagnostics) {
     stream.write(
-      `[${diagnostic.code}]${diagnostic.field === undefined ? "" : ` ${diagnostic.field}:`} ${diagnostic.message}\n`,
+      `[${diagnostic.phase}] [${diagnostic.code}]${diagnostic.field === undefined ? "" : ` ${diagnostic.field}:`} ${diagnostic.message}\n`,
     );
   }
   return result.ok ? EXIT_OK : EXIT_NONCONFORMANT;

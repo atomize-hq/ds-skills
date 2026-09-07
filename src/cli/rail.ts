@@ -59,7 +59,9 @@ export function ledgerValidate(options: RailOptions): RailResult {
       command: "ledger validate",
       ok: false,
       ledgerPath: absPath,
-      diagnostics: errors.map(parseDiagnostic),
+      diagnostics: errors.map((line: string) =>
+        parseDiagnostic("ledger", line),
+      ),
     };
   }
 
@@ -71,9 +73,12 @@ export function ledgerValidate(options: RailOptions): RailResult {
   const conformance = evaluateSyncLedgerConformance(data);
   const status = evaluateStatusRail(data);
   const diagnostics: Diagnostic[] = [
-    ...binding.errors.map(parseDiagnostic),
+    ...binding.errors.map((line: string) =>
+      parseDiagnostic("publication", line),
+    ),
     ...conformance.blockers.map(
       (blocker: { code: string; field: string; message: string }) => ({
+        phase: "conformance" as const,
         code: blocker.code,
         field: blocker.field,
         message: blocker.message,
@@ -115,7 +120,9 @@ export function ledgerParity(options: RailOptions): RailResult {
     ok: result.ok,
     state: result.state ?? null,
     ledgerPath: path.resolve(ledgerPath),
-    diagnostics: (result.errors ?? []).map(parseDiagnostic),
+    diagnostics: (result.errors ?? []).map((line: string) =>
+      parseDiagnostic("parity", line),
+    ),
   };
 }
 
@@ -130,7 +137,7 @@ export function proofValidate(options: RailOptions): RailResult {
     command: "proof validate",
     ok: errors.length === 0,
     proofPath: absPath,
-    diagnostics: errors.map(parseDiagnostic),
+    diagnostics: errors.map((line: string) => parseDiagnostic("proof", line)),
   };
 }
 
