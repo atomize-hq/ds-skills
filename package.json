@@ -6,7 +6,7 @@
   },
   "homepage": "https://github.com/atomize-hq/ds-skills#readme",
   "bugs": "https://github.com/atomize-hq/ds-skills/issues",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "engines": {
     "node": ">=22"
   },
