@@ -45,16 +45,34 @@ test -z "$out" || { echo "unimplemented command wrote to stdout: $out" >&2; exit
 # the files field — a files entry naming a directory that does not ship still
 # looks correct in package.json.
 installed="$work/consumer/node_modules/@atomize-hq/ds-skills"
-for dir in schemas templates profiles; do
+for dir in skills schemas templates profiles; do
   test -d "$installed/$dir" || { echo "$dir/ did not survive packing" >&2; exit 1; }
 done
 test -f "$installed/schemas/sync-ledger.schema.json"
 test -f "$installed/profiles/example.json"
 test -f "$installed/src/validate/artifact.mjs"
 
-# The portable schemas must not carry a consumer's namespace out into the world.
-if grep -rq 'collider' "$installed/schemas"; then
-  echo "installed schemas name a consumer" >&2; exit 1
+# Nothing shipped as data may carry a consumer's namespace out into the world.
+for dir in schemas skills templates profiles; do
+  if grep -rqi 'collider' "$installed/$dir"; then
+    echo "installed $dir/ names a consumer" >&2; exit 1
+  fi
+done
+
+# The two ai-elements skills stay with the consumer: a design-system tooling
+# package has no business shipping a third-party component library's docs, and a
+# moved skill that still points at them drags the coupling along behind it.
+if grep -rqiE 'ai-elements|ai_elements|\bplate\b' "$installed/skills"; then
+  echo "installed skills reference ai-elements or plate" >&2; exit 1
+fi
+test ! -e "$installed/skills/ai-elements"
+test ! -e "$installed/skills/ai-elements-plate-builder"
+
+# Skills sit one level deeper here than under .agents/skills/, so a relative
+# asset path that was right in the consumer is silently wrong in the package.
+if grep -rqE '\]\(\.\./(schemas|templates)/' "$installed/skills" || \
+   grep -rqE '`\.\./(schemas|templates)' "$installed/skills"; then
+  echo "installed skills use consumer-relative asset paths" >&2; exit 1
 fi
 
 echo "pack check ok — installs, imports, builds the plugin, and runs the CLI as a consumer"

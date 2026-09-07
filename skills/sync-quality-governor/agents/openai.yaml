@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sync Quality Governor"
+  short_description: "Audit and reconcile design, code, and Storybook drift"
+  default_prompt: "Use $sync-quality-governor to audit drift across code, Storybook, Figma, component specs, tokens, and native boundaries, then produce the smallest reconciliation plan."
