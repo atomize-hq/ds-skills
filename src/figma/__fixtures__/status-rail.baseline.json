@@ -1,0 +1,79 @@
+{
+  "blocked": {
+    "claimRelevant": true,
+    "sourceVersionOrRevision": "ledgerVersion:2|artifactRevision:5555555555555555555555555555555555555555",
+    "freshness": "current",
+    "outcome": "deferred",
+    "statusReasonCodes": ["ct8b-parity-deferred"]
+  },
+  "declared": {
+    "claimRelevant": true,
+    "sourceVersionOrRevision": "ledgerVersion:2|artifactRevision:8888888888888888888888888888888888888888",
+    "freshness": "current",
+    "outcome": "deferred",
+    "statusReasonCodes": ["ct8b-parity-deferred"]
+  },
+  "incomplete": {
+    "claimRelevant": true,
+    "sourceVersionOrRevision": "ledgerVersion:2|artifactRevision:abababababababababababababababababababab",
+    "freshness": "current",
+    "outcome": "deferred",
+    "statusReasonCodes": ["ct8b-parity-deferred"]
+  },
+  "invalid-contradictory-mode": {
+    "claimRelevant": true,
+    "sourceVersionOrRevision": "unavailable",
+    "freshness": "missing",
+    "outcome": "unsatisfied",
+    "statusReasonCodes": ["ct-8b-missing"]
+  },
+  "invalid-deferred-complete": {
+    "claimRelevant": true,
+    "sourceVersionOrRevision": "unavailable",
+    "freshness": "missing",
+    "outcome": "unsatisfied",
+    "statusReasonCodes": ["ct-8b-missing"]
+  },
+  "invalid-missing-required-field": {
+    "claimRelevant": true,
+    "sourceVersionOrRevision": "unavailable",
+    "freshness": "missing",
+    "outcome": "unsatisfied",
+    "statusReasonCodes": ["ct-8b-missing"]
+  },
+  "invalid-tokens-studio-carrier": {
+    "claimRelevant": true,
+    "sourceVersionOrRevision": "unavailable",
+    "freshness": "missing",
+    "outcome": "unsatisfied",
+    "statusReasonCodes": ["ct-8b-missing"]
+  },
+  "stale": {
+    "claimRelevant": true,
+    "sourceVersionOrRevision": "ledgerVersion:2|artifactRevision:9898989898989898989898989898989898989898",
+    "freshness": "stale",
+    "outcome": "deferred",
+    "statusReasonCodes": ["ct8b-parity-stale"]
+  },
+  "valid-carried": {
+    "claimRelevant": true,
+    "sourceVersionOrRevision": "ledgerVersion:2|artifactRevision:bcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbc",
+    "freshness": "current",
+    "outcome": "deferred",
+    "statusReasonCodes": ["ct8b-parity-deferred"]
+  },
+  "valid-required": {
+    "claimRelevant": true,
+    "sourceVersionOrRevision": "ledgerVersion:2|artifactRevision:3333333333333333333333333333333333333333",
+    "freshness": "current",
+    "outcome": "satisfied",
+    "statusReasonCodes": []
+  },
+  "valid": {
+    "claimRelevant": true,
+    "sourceVersionOrRevision": "ledgerVersion:2|artifactRevision:1111111111111111111111111111111111111111",
+    "freshness": "current",
+    "outcome": "deferred",
+    "statusReasonCodes": ["ct8b-parity-deferred"]
+  }
+}

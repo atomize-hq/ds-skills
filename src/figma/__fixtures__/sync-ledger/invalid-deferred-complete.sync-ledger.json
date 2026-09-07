@@ -1,0 +1,22 @@
+{
+  "ledgerVersion": "2",
+  "artifact": {
+    "path": "design-tokens/dist/figma/tokens.json",
+    "revision": "6666666666666666666666666666666666666666"
+  },
+  "publish": {
+    "mode": "plugin-import-manual",
+    "tokensStudioCarrier": false,
+    "figmaFile": "figma://file/fixture-invalid-deferred-complete"
+  },
+  "verification": {
+    "materializationStatus": "passed",
+    "lastVerifiedRevision": "6666666666666666666666666666666666666666"
+  },
+  "promotion": {
+    "parityMode": "deferred",
+    "parityDeferredReason": "This fixture should fail because deferred parity cannot claim complete promotion.",
+    "highestEarnedLevel": "E-promotion-complete"
+  },
+  "exceptions": []
+}

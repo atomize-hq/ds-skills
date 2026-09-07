@@ -1,0 +1,21 @@
+{
+  "ledgerVersion": "2",
+  "artifact": {
+    "path": "design-tokens/dist/figma/tokens.json",
+    "revision": "3333333333333333333333333333333333333333"
+  },
+  "publish": {
+    "mode": "plugin-import-manual",
+    "tokensStudioCarrier": false,
+    "figmaFile": "figma://file/fixture-valid-required-sync-ledger"
+  },
+  "verification": {
+    "materializationStatus": "passed",
+    "lastVerifiedRevision": "3333333333333333333333333333333333333333"
+  },
+  "promotion": {
+    "parityMode": "required",
+    "highestEarnedLevel": "E-promotion-complete"
+  },
+  "exceptions": []
+}

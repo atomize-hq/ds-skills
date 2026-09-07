@@ -1,0 +1,21 @@
+{
+  "proofVersion": "1",
+  "mode": "plugin-import-manual",
+  "artifact": {
+    "path": "design-tokens/dist/figma/tokens.json",
+    "gitSha": "9eb468797849e18fde38273a385ca2ad4e2bdd1a"
+  },
+  "destination": {
+    "name": "Fixture Consumer A",
+    "figmaFile": "figma://file/fixture-consumer-a"
+  },
+  "materialization": {
+    "status": "passed",
+    "attemptedAt": "2026-03-19T20:46:09Z"
+  },
+  "carrier": {
+    "used": false,
+    "reason": "Tokens Studio temporarily carried the artifact.",
+    "exitExpectation": null
+  }
+}

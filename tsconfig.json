@@ -11,7 +11,9 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "noEmit": true
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": false
   },
-  "include": ["src/**/*.ts", "plugin/**/*.ts"]
+  "include": ["src/**/*.ts", "src/**/*.mjs", "plugin/**/*.ts"]
 }

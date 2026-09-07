@@ -1,0 +1,30 @@
+{
+  "ledgerVersion": "2",
+  "artifact": {
+    "path": "design-tokens/dist/figma/tokens.json",
+    "revision": "5555555555555555555555555555555555555555"
+  },
+  "publish": {
+    "mode": "plugin-import-manual",
+    "tokensStudioCarrier": false,
+    "figmaFile": "figma://file/fixture-blocked-sync-ledger"
+  },
+  "verification": {
+    "materializationStatus": "failed",
+    "lastVerifiedRevision": "5555555555555555555555555555555555555555"
+  },
+  "promotion": {
+    "parityMode": "deferred",
+    "parityDeferredReason": "Parity remains deferred because the latest proof attempt failed and the hardened Variables API rail is not yet active.",
+    "highestEarnedLevel": "C-consumption-valid"
+  },
+  "exceptions": [
+    {
+      "code": "figma-proof-failed",
+      "message": "The latest plugin-based materialization attempt failed for the current artifact revision.",
+      "blocking": true,
+      "status": "open",
+      "field": "verification.materializationStatus"
+    }
+  ]
+}

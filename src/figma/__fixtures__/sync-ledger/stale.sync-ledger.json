@@ -1,0 +1,22 @@
+{
+  "ledgerVersion": "2",
+  "artifact": {
+    "path": "design-tokens/dist/figma/tokens.json",
+    "revision": "9898989898989898989898989898989898989898"
+  },
+  "publish": {
+    "mode": "plugin-import-manual",
+    "tokensStudioCarrier": false,
+    "figmaFile": "figma://file/fixture-stale-sync-ledger"
+  },
+  "verification": {
+    "materializationStatus": "passed",
+    "lastVerifiedRevision": "1212121212121212121212121212121212121212"
+  },
+  "promotion": {
+    "parityMode": "deferred",
+    "parityDeferredReason": "The latest successful proof ran against an older artifact revision and must be refreshed.",
+    "highestEarnedLevel": "C-consumption-valid"
+  },
+  "exceptions": []
+}

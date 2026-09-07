@@ -1,0 +1,22 @@
+{
+  "ledgerVersion": "2",
+  "artifact": {
+    "path": "design-tokens/dist/figma/tokens.json",
+    "revision": "8888888888888888888888888888888888888888"
+  },
+  "publish": {
+    "mode": "plugin-import-manual",
+    "tokensStudioCarrier": false,
+    "figmaFile": "figma://file/fixture-declared-sync-ledger"
+  },
+  "verification": {
+    "materializationStatus": "not-run",
+    "lastVerifiedRevision": null
+  },
+  "promotion": {
+    "parityMode": "deferred",
+    "parityDeferredReason": "The proof rail is declared, but the current artifact revision has not yet been exercised.",
+    "highestEarnedLevel": "C-consumption-valid"
+  },
+  "exceptions": []
+}

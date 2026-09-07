@@ -1,0 +1,22 @@
+{
+  "ledgerVersion": "2",
+  "artifact": {
+    "path": "design-tokens/dist/figma/tokens.json",
+    "revision": "abababababababababababababababababababab"
+  },
+  "publish": {
+    "mode": "plugin-import-manual",
+    "tokensStudioCarrier": false,
+    "figmaFile": "figma://file/fixture-incomplete-sync-ledger"
+  },
+  "verification": {
+    "materializationStatus": "failed",
+    "lastVerifiedRevision": "abababababababababababababababababababab"
+  },
+  "promotion": {
+    "parityMode": "deferred",
+    "parityDeferredReason": "The latest proof attempt failed and has not yet been converted into an explicit blocking exception record.",
+    "highestEarnedLevel": "C-consumption-valid"
+  },
+  "exceptions": []
+}

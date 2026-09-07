@@ -1,0 +1,21 @@
+{
+  "ledgerVersion": "2",
+  "artifact": {
+    "path": "design-tokens/dist/figma/tokens.json"
+  },
+  "publish": {
+    "mode": "plugin-import-manual",
+    "tokensStudioCarrier": false,
+    "figmaFile": "figma://file/fixture-invalid-missing-required"
+  },
+  "verification": {
+    "materializationStatus": "not-run",
+    "lastVerifiedRevision": null
+  },
+  "promotion": {
+    "parityMode": "deferred",
+    "parityDeferredReason": "This fixture intentionally omits artifact.revision to exercise missing-field validation.",
+    "highestEarnedLevel": "C-consumption-valid"
+  },
+  "exceptions": []
+}
