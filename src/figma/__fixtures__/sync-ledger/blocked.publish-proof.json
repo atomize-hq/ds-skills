@@ -1,0 +1,22 @@
+{
+  "proofVersion": "1",
+  "mode": "plugin-import-manual",
+  "artifact": {
+    "path": "design-tokens/dist/figma/tokens.json",
+    "gitSha": "5555555555555555555555555555555555555555"
+  },
+  "destination": {
+    "name": "Fixture Consumer A",
+    "figmaFile": "figma://file/fixture-consumer-a"
+  },
+  "materialization": {
+    "status": "failed",
+    "attemptedAt": "2026-03-19T20:46:09Z",
+    "notes": "Generated companion proof for the blocked ledger fixture."
+  },
+  "carrier": {
+    "used": false,
+    "reason": null,
+    "exitExpectation": null
+  }
+}

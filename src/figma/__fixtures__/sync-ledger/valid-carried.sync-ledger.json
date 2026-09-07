@@ -1,5 +1,5 @@
 {
-  "ledgerVersion": "2",
+  "ledgerVersion": "3",
   "artifact": {
     "path": "design-tokens/dist/figma/tokens.json",
     "revision": "bcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbc"
@@ -7,7 +7,7 @@
   "publish": {
     "mode": "tokens-studio-carried",
     "tokensStudioCarrier": true,
-    "figmaFile": "figma://file/fixture-valid-carried-sync-ledger"
+    "figmaFile": "figma://file/fixture-consumer-a"
   },
   "verification": {
     "materializationStatus": "passed",
@@ -18,5 +18,9 @@
     "parityDeferredReason": "Tokens Studio is only acting as temporary carriage until the hardened rail is available.",
     "highestEarnedLevel": "D-publish-valid"
   },
-  "exceptions": []
+  "exceptions": [],
+  "publication": {
+    "proof": "./valid-carried.publish-proof.json",
+    "sha256": "a865c1b28a449aab2b70c91d31f026d30c197ab5fa9397615d30143e29e517d8"
+  }
 }

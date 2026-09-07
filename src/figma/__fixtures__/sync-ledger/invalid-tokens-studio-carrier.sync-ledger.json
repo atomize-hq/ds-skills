@@ -1,5 +1,5 @@
 {
-  "ledgerVersion": "2",
+  "ledgerVersion": "3",
   "artifact": {
     "path": "design-tokens/dist/figma/tokens.json",
     "revision": "7777777777777777777777777777777777777777"
@@ -7,7 +7,7 @@
   "publish": {
     "mode": "plugin-import-manual",
     "tokensStudioCarrier": true,
-    "figmaFile": "figma://file/fixture-invalid-carrier"
+    "figmaFile": "figma://file/fixture-consumer-a"
   },
   "verification": {
     "materializationStatus": "passed",
@@ -18,5 +18,9 @@
     "parityDeferredReason": "This fixture should fail because Tokens Studio carriage cannot be claimed for plugin-import-manual.",
     "highestEarnedLevel": "D-publish-valid"
   },
-  "exceptions": []
+  "exceptions": [],
+  "publication": {
+    "proof": "./invalid-tokens-studio-carrier.publish-proof.json",
+    "sha256": "e6a8dc098a27be321d0d52a653a7fdb503aedd3872d8b495431018e4f2b2bb58"
+  }
 }

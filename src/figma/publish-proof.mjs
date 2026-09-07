@@ -1,39 +1,65 @@
 import fs from "node:fs";
 import path from "node:path";
 
-export const defaultPublishProofPath = "src/figma/publish-proof.json";
+import { CannotEvaluateError, portablePublishModes } from "./profile.mjs";
+
 export const publishProofUsage =
-  "Usage: node scripts/validate-publish-proof.mjs [path-to-publish-proof.json]";
-export const publishProofArtifactPath = "design-tokens/dist/figma/tokens.json";
-export const publishProofPilotName = "Collider";
-export const publishProofPilotFile = "figma://file/fixture-consumer-a";
-export const publishProofModes = new Set([
-  "plugin-import-manual",
-  "tokens-studio-carried",
-]);
+  "Usage: ds-skills proof validate --proof <path> --profile <path>";
+
+/**
+ * Portable invariants. Deliberately not profile-configurable: a profile may
+ * narrow the mode set (see profile.mjs) but may not add to it, and the status
+ * set, SHA format and timestamp format are the package's guarantees.
+ */
+export const publishProofModes = new Set(portablePublishModes);
 export const materializationStatuses = new Set(["passed", "failed"]);
 
 const shaPattern = /^[a-f0-9]{40}$/;
 const utcIsoPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
 
+/**
+ * Reads the proof's bytes as well as its data. The bytes are what the ledger's
+ * `publication.sha256` binds to, so they must not be re-serialized on the way
+ * to the digest — a reformat would change the digest and a normalization would
+ * hide one.
+ */
 export function readPublishProof(target) {
   const absPath = path.resolve(target);
-  return {
-    absPath,
-    data: JSON.parse(fs.readFileSync(absPath, "utf8")),
-  };
+  let bytes;
+  try {
+    bytes = fs.readFileSync(absPath);
+  } catch {
+    throw new CannotEvaluateError(
+      "PROOF_UNREADABLE",
+      `publish proof could not be read: ${absPath}`,
+    );
+  }
+
+  let data;
+  try {
+    data = JSON.parse(bytes.toString("utf8"));
+  } catch (error) {
+    throw new CannotEvaluateError(
+      "PROOF_MALFORMED",
+      `publish proof is not valid JSON: ${absPath} (${error.message})`,
+    );
+  }
+
+  return { absPath, bytes, data };
 }
 
-export function loadAndValidatePublishProof(target = defaultPublishProofPath) {
-  const { absPath, data } = readPublishProof(target);
+export function loadAndValidatePublishProof(target, profile) {
+  const { absPath, bytes, data } = readPublishProof(target);
   return {
     absPath,
+    bytes,
     data,
-    errors: validatePublishProof(data),
+    errors: validatePublishProof(data, profile),
   };
 }
 
-export function validatePublishProof(data) {
+export function validatePublishProof(data, profile) {
+  requireProfile(profile);
   const errors = [];
 
   if (!assertPlainObject(errors, data, "publish proof must be a JSON object")) {
@@ -58,21 +84,21 @@ export function validatePublishProof(data) {
   );
   requireLiteral(errors, data.proofVersion, "1", "proofVersion");
 
-  if (!publishProofModes.has(data.mode)) {
+  if (!profile.publishModes.includes(data.mode)) {
     errors.push(
-      "[CT-7B_PUBLISH_PROOF_INVALID_MODE] mode must be plugin-import-manual or tokens-studio-carried",
+      `[CT-7B_PUBLISH_PROOF_INVALID_MODE] mode must be one of: ${profile.publishModes.join(", ")}`,
     );
   }
 
-  validateArtifact(errors, data.artifact);
-  validateDestination(errors, data.destination);
+  validateArtifact(errors, data.artifact, profile);
+  validateDestination(errors, data.destination, profile);
   validateMaterialization(errors, data.materialization);
   validateCarrier(errors, data.carrier, data.mode);
 
   return errors;
 }
 
-function validateArtifact(errors, artifact) {
+function validateArtifact(errors, artifact, profile) {
   if (!assertPlainObject(errors, artifact, "artifact must be an object")) {
     return;
   }
@@ -83,12 +109,7 @@ function validateArtifact(errors, artifact) {
     { required: ["path", "gitSha"], optional: [] },
     "artifact",
   );
-  requireLiteral(
-    errors,
-    artifact.path,
-    publishProofArtifactPath,
-    "artifact.path",
-  );
+  requireLiteral(errors, artifact.path, profile.artifactPath, "artifact.path");
 
   if (
     typeof artifact.gitSha !== "string" ||
@@ -100,7 +121,7 @@ function validateArtifact(errors, artifact) {
   }
 }
 
-function validateDestination(errors, destination) {
+function validateDestination(errors, destination, profile) {
   if (
     !assertPlainObject(errors, destination, "destination must be an object")
   ) {
@@ -116,13 +137,13 @@ function validateDestination(errors, destination) {
   requireLiteral(
     errors,
     destination.name,
-    publishProofPilotName,
+    profile.destinationName,
     "destination.name",
   );
   requireLiteral(
     errors,
     destination.figmaFile,
-    publishProofPilotFile,
+    profile.destinationFigmaFile,
     "destination.figmaFile",
   );
 }
@@ -236,6 +257,19 @@ function validateCarrier(errors, carrier, mode) {
   if (mode === "tokens-studio-carried") {
     errors.push(
       "[CT-7B_PUBLISH_PROOF_CARRIER_MODE_MISMATCH] mode=tokens-studio-carried requires carrier.used=true",
+    );
+  }
+}
+
+function requireProfile(profile) {
+  if (
+    profile === undefined ||
+    profile === null ||
+    typeof profile.artifactPath !== "string"
+  ) {
+    throw new CannotEvaluateError(
+      "PROFILE_REQUIRED",
+      "validatePublishProof requires a resolved profile; see readProfile()",
     );
   }
 }

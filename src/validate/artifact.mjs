@@ -18,6 +18,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { fileURLToPath } from "node:url";
 
 const SUPPORTED = new Set([
   "type",
@@ -42,43 +43,69 @@ const SUPPORTED = new Set([
   "$ref",
 ]);
 
-function main() {
-  const args = process.argv.slice(2);
-  const profileIndex = args.indexOf("--profile");
-  let profile = {};
-  if (profileIndex !== -1) {
-    const profilePath = args[profileIndex + 1];
-    if (!profilePath) fail("--profile needs a path");
-    profile = readJson(profilePath);
-    args.splice(profileIndex, 2);
+/** Thrown for anything the validator cannot even attempt. */
+export class ValidateUsageError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "ValidateUsageError";
   }
+}
 
-  const [schemaPath, instancePath] = args;
-  if (!schemaPath || !instancePath) {
-    fail(
-      "Usage: node validate-artifact.mjs <schema.json> <instance.json> [--profile <profile.json>]",
+export const validateUsage =
+  "Usage: ds-skills validate <schema.json> <instance.json> [--profile <profile.json>]";
+
+/**
+ * The process contract, as a function: same output, same exit codes, callable
+ * from the CLI without spawning a second Node. `artifact.test.mjs` still spawns
+ * the script, so the contract stays pinned where its callers actually meet it.
+ */
+export function runValidateArtifactCli(argv, io = {}) {
+  const stdout = io.stdout ?? process.stdout;
+  const stderr = io.stderr ?? process.stderr;
+  const args = [...argv];
+
+  try {
+    const profileIndex = args.indexOf("--profile");
+    let profile = {};
+    if (profileIndex !== -1) {
+      const profilePath = args[profileIndex + 1];
+      if (!profilePath) fail("--profile needs a path");
+      profile = readJson(profilePath);
+      args.splice(profileIndex, 2);
+    }
+
+    const [schemaPath, instancePath] = args;
+    if (!schemaPath || !instancePath) fail(validateUsage);
+
+    const schema = readJson(schemaPath);
+    const instance = readJson(instancePath);
+    const errors = validate(instance, schema, {
+      root: schema,
+      profile,
+      path: "",
+    });
+
+    if (errors.length > 0) {
+      stderr.write(`✗ ${path.resolve(instancePath)}\n`);
+      stderr.write(`  against ${path.resolve(schemaPath)}\n`);
+      for (const error of errors) stderr.write(`  - ${error}\n`);
+      stderr.write(
+        `\n${errors.length} error${errors.length === 1 ? "" : "s"}.\n`,
+      );
+      return 1;
+    }
+
+    stdout.write(
+      `✓ ${schema.title ?? path.basename(schemaPath)}: ${path.resolve(instancePath)}\n`,
     );
+    return 0;
+  } catch (error) {
+    if (error instanceof ValidateUsageError) {
+      stderr.write(`${error.message}\n`);
+      return 1;
+    }
+    throw error;
   }
-
-  const schema = readJson(schemaPath);
-  const instance = readJson(instancePath);
-  const errors = validate(instance, schema, {
-    root: schema,
-    profile,
-    path: "",
-  });
-
-  if (errors.length > 0) {
-    console.error(`✗ ${path.resolve(instancePath)}`);
-    console.error(`  against ${path.resolve(schemaPath)}`);
-    for (const error of errors) console.error(`  - ${error}`);
-    console.error(`\n${errors.length} error${errors.length === 1 ? "" : "s"}.`);
-    process.exit(1);
-  }
-
-  console.log(
-    `✓ ${schema.title ?? path.basename(schemaPath)}: ${path.resolve(instancePath)}`,
-  );
 }
 
 function validate(value, schema, ctx) {
@@ -378,8 +405,10 @@ function readJson(target) {
 }
 
 function fail(message) {
-  console.error(message);
-  process.exit(1);
+  throw new ValidateUsageError(message);
 }
 
-main();
+// Run only when invoked as a script, so importing it does not exit the process.
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  process.exit(runValidateArtifactCli(process.argv.slice(2)));
+}

@@ -1,0 +1,21 @@
+{
+  "proofVersion": "1",
+  "mode": "tokens-studio-carried",
+  "artifact": {
+    "path": "design-tokens/dist/figma/tokens.json",
+    "gitSha": "bcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbc"
+  },
+  "destination": {
+    "name": "Fixture Consumer A",
+    "figmaFile": "figma://file/fixture-consumer-a"
+  },
+  "materialization": {
+    "status": "passed",
+    "attemptedAt": "2026-03-19T20:46:09Z"
+  },
+  "carrier": {
+    "used": true,
+    "reason": "Tokens Studio carried the artifact for this fixture.",
+    "exitExpectation": "Retire the carrier once the plugin import is routine."
+  }
+}

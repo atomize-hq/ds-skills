@@ -1,0 +1,9 @@
+{
+  "$comment": "Fixture consumer A. Stands in for the repo the 11 ledger and 5 proof fixtures were originally written against, with that repo's identifiers removed — the package no longer carries a consumer's name or Figma file key, in fixtures any more than in modules.",
+  "artifact-path": { "const": "design-tokens/dist/figma/tokens.json" },
+  "destination-name": { "const": "Fixture Consumer A" },
+  "destination-figma-file": { "const": "figma://file/fixture-consumer-a" },
+  "publish-modes": {
+    "enum": ["plugin-import-manual", "tokens-studio-carried"]
+  }
+}

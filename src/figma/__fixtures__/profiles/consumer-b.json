@@ -1,0 +1,7 @@
+{
+  "$comment": "Fixture consumer B. Deliberately unlike A in every profiled dimension — different artifact path, different destination identity, and a narrowed mode set. Copying A's layout under another name would prove only that the validators can read two files.",
+  "artifact-path": { "const": "build/design-tokens.json" },
+  "destination-name": { "const": "Fixture Consumer B" },
+  "destination-figma-file": { "const": "figma://file/fixture-consumer-b" },
+  "publish-modes": { "enum": ["plugin-import-manual"] }
+}

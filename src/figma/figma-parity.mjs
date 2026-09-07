@@ -4,9 +4,8 @@ import {
   loadAndValidateSyncLedger,
 } from "./sync-ledger.mjs";
 
-export const defaultSyncLedgerPath = "src/figma/sync-ledger.json";
 export const figmaParityUsage =
-  "Usage: node scripts/validate-figma-parity.mjs [path-to-sync-ledger.json]";
+  "Usage: ds-skills ledger parity --ledger <path> --profile <path>";
 
 export function evaluateFigmaParity(ledger) {
   const parityMode = ledger.promotion.parityMode;
@@ -73,10 +72,10 @@ export function evaluateFigmaParity(ledger) {
 }
 
 export function validateFigmaParity(options = {}) {
-  const target = options.target ?? defaultSyncLedgerPath;
+  const target = options.target;
   const loadLedger =
     options.loadAndValidateSyncLedger ?? loadAndValidateSyncLedger;
-  const { data, errors } = loadLedger(target);
+  const { data, errors } = loadLedger(target, options.profile);
 
   if (errors.length > 0) {
     return { ok: false, parityMode: null, errors, exitCode: 1 };
@@ -91,14 +90,15 @@ export function runValidateFigmaParityCli(options = {}) {
   const stderr = options.stderr ?? process.stderr;
   const runValidation = options.runValidation ?? validateFigmaParity;
 
-  if (args.length > 1) {
+  if (args.length !== 1) {
     writeLine(stderr, figmaParityUsage);
     return 1;
   }
 
   try {
     const result = runValidation({
-      target: args[0] ?? defaultSyncLedgerPath,
+      target: args[0],
+      profile: options.profile,
     });
 
     if (!result.ok) {

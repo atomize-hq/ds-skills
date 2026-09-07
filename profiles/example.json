@@ -5,6 +5,16 @@
     "const": "dist/tokens.json"
   },
 
+  "destination-name": {
+    "const": "Example Design System",
+    "description": "Read by the rail validators, not by a schema: the publish proof's destination.name must equal this literal. Declaring it here is what closes the duplication of the same constant across two validators."
+  },
+
+  "destination-figma-file": {
+    "const": "figma://file/example-destination",
+    "description": "The one destination this repo publishes to. Both the proof and — through the publication binding — the ledger must name it."
+  },
+
   "publish-modes": {
     "enum": ["plugin-import-manual", "tokens-studio-carried"],
     "description": "The portable schema fixes the shape; a consumer narrows the set it actually uses. It may only ever narrow — a profile cannot introduce a mode the portable enum does not carry, and cannot re-enable a retired one."

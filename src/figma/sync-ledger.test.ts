@@ -1,9 +1,11 @@
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
 import { describe, expect, it } from "vitest";
 
+import {
+  createWritableBuffer,
+  fixtureProfile,
+  ledgerFixturePath as fixturePath,
+  readLedgerFixture as readFixture,
+} from "./__fixtures__/support.js";
 import {
   evaluateFigmaParity,
   runValidateFigmaParityCli,
@@ -16,13 +18,13 @@ import {
   validateSyncLedger,
 } from "./sync-ledger.mjs";
 
-const here = path.dirname(fileURLToPath(import.meta.url));
-const syncLedgerFixtureDir = path.join(here, "__fixtures__/sync-ledger");
+const profile = fixtureProfile();
 
 describe("loadAndValidateSyncLedger", () => {
   it("accepts the happy-path deferred fixture", () => {
     const result = loadAndValidateSyncLedger(
       fixturePath("valid.sync-ledger.json"),
+      profile,
     );
 
     expect(result.errors).toEqual([]);
@@ -34,6 +36,7 @@ describe("loadAndValidateSyncLedger", () => {
   it("accepts the blocked example fixture", () => {
     const result = loadAndValidateSyncLedger(
       fixturePath("blocked.sync-ledger.json"),
+      profile,
     );
 
     expect(result.errors).toEqual([]);
@@ -44,6 +47,7 @@ describe("loadAndValidateSyncLedger", () => {
   it("reports missing required contract fields", () => {
     const result = loadAndValidateSyncLedger(
       fixturePath("invalid-missing-required-field.sync-ledger.json"),
+      profile,
     );
 
     expect(result.errors).toContain(
@@ -54,6 +58,7 @@ describe("loadAndValidateSyncLedger", () => {
   it("reports contradictory parity metadata", () => {
     const result = loadAndValidateSyncLedger(
       fixturePath("invalid-contradictory-mode.sync-ledger.json"),
+      profile,
     );
 
     expect(result.errors).toContain(
@@ -64,6 +69,7 @@ describe("loadAndValidateSyncLedger", () => {
   it("reports invalid Tokens Studio carrier metadata", () => {
     const result = loadAndValidateSyncLedger(
       fixturePath("invalid-tokens-studio-carrier.sync-ledger.json"),
+      profile,
     );
 
     expect(result.errors).toContain(
@@ -74,6 +80,7 @@ describe("loadAndValidateSyncLedger", () => {
   it("forbids promotion-complete while parity is deferred", () => {
     const result = loadAndValidateSyncLedger(
       fixturePath("invalid-deferred-complete.sync-ledger.json"),
+      profile,
     );
 
     expect(result.errors).toContain(
@@ -84,6 +91,7 @@ describe("loadAndValidateSyncLedger", () => {
   it("accepts the required ledger contract when using the Enterprise rail", () => {
     const result = validateSyncLedger(
       readFixture("valid-required.sync-ledger.json"),
+      profile,
     );
 
     expect(result).toEqual([]);
@@ -126,6 +134,7 @@ describe("validateFigmaParity", () => {
   it("accepts a required ledger with the hardened rail and no blocking exceptions", () => {
     const result = validateFigmaParity({
       target: fixturePath("valid-required.sync-ledger.json"),
+      profile,
     });
 
     expect(result).toEqual({
@@ -212,6 +221,7 @@ describe("runValidateSyncLedgerCli", () => {
     const stderr = createWritableBuffer();
     const exitCode = runValidateSyncLedgerCli({
       args: [fixturePath("stale.sync-ledger.json")],
+      profile,
       stdout,
       stderr,
     });
@@ -233,6 +243,7 @@ describe("runValidateFigmaParityCli", () => {
     const stderr = createWritableBuffer();
     const exitCode = runValidateFigmaParityCli({
       args: [fixturePath("valid.sync-ledger.json")],
+      profile,
       stdout,
       stderr,
     });
@@ -241,49 +252,70 @@ describe("runValidateFigmaParityCli", () => {
     expect(stdout.read()).toContain("[FIGMA_PARITY_DEFERRED]");
     expect(stdout.read()).toContain("state=verified-current");
     expect(stdout.read()).toContain(
-      "Parity remains deferred because the release-governed promotion gate is not yet in place for Collider.",
+      "Parity remains deferred because the release-governed promotion gate is not yet in place for this consumer.",
     );
     expect(stderr.read()).toBe("");
   });
 });
 
-function fixturePath(name: string) {
-  return path.join(syncLedgerFixtureDir, name);
-}
+describe("the publication binding's absence rules", () => {
+  const withPublication = readFixture("valid.sync-ledger.json");
+  const withoutPublication = readFixture("declared.sync-ledger.json");
 
-function readFixture(name: string) {
-  return JSON.parse(fs.readFileSync(fixturePath(name), "utf8")) as {
-    artifact: { revision: string };
-    exceptions: Array<{
-      blocking: boolean;
-      code: string;
-      field?: string;
-      message: string;
-      status: string;
-    }>;
-    promotion: { parityMode: string };
-    publish: {
-      figmaFile: string;
-      mode: string;
-      tokensStudioCarrier: boolean;
-    };
-    verification: {
-      lastVerifiedRevision: string | null;
-      materializationStatus: string;
-    };
-  };
-}
+  it("forbids a proof for a materialization that has not run", () => {
+    // A pre-publication repository is legitimately proofless. A binding here
+    // would claim an attestation for something nobody attempted.
+    expect(
+      validateSyncLedger(
+        { ...withoutPublication, publication: withPublication.publication },
+        profile,
+      ),
+    ).toContain(
+      "[CT-8B_NOT_RUN_FORBIDS_PUBLICATION] publication must be absent when verification.materializationStatus is not-run",
+    );
+  });
 
-function createWritableBuffer() {
-  let buffer = "";
-
-  return {
-    write(chunk: string | Uint8Array) {
-      buffer +=
-        typeof chunk === "string" ? chunk : Buffer.from(chunk).toString("utf8");
+  it.each(["passed", "failed"])(
+    "requires a proof when materialization is %s",
+    (status) => {
+      // A failed attempt is still an attestation, so omitting one is not the
+      // way to record a failure.
+      const { publication: _dropped, ...bare } = withPublication;
+      const errors = validateSyncLedger(
+        {
+          ...bare,
+          verification: { ...bare.verification, materializationStatus: status },
+        },
+        profile,
+      );
+      expect(errors).toContain(
+        "[CT-8B_MATERIALIZATION_REQUIRES_PUBLICATION] publication is required when verification.materializationStatus is passed or failed",
+      );
     },
-    read() {
-      return buffer;
-    },
-  };
-}
+  );
+
+  it("rejects a binding that is not an exact digest", () => {
+    expect(
+      validateSyncLedger(
+        {
+          ...withPublication,
+          publication: {
+            proof: "./publish-proof.json",
+            sha256: "not-a-digest",
+          },
+        },
+        profile,
+      ),
+    ).toContain(
+      "[CT-8B_INVALID_PUBLICATION_DIGEST] publication.sha256 must be a 64-character lowercase sha256 digest",
+    );
+  });
+
+  it("no longer accepts a v2 ledger", () => {
+    // The version moves with the required key, so a v2 record cannot pass by
+    // simply omitting the binding it never had.
+    expect(
+      validateSyncLedger({ ...withPublication, ledgerVersion: "2" }, profile),
+    ).toContain("[CT-8B_INVALID_LITERAL] ledgerVersion must be 3");
+  });
+});

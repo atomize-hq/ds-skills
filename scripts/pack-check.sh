@@ -34,8 +34,11 @@ mkdir -p "$work/elsewhere"
 
 # An unimplemented command must exit non-zero and print nothing on stdout: a
 # caller parsing stdout must not be able to read the silence as an empty result.
+# `figma verify` is T13's, so it is still the honest subject here — `ledger
+# validate` now exits 2 for a *different* reason (missing --profile), which
+# would have kept this assertion green while testing nothing it claims to.
 set +e
-out="$("$cli" ledger validate --ledger nope.json 2>/dev/null)"
+out="$("$cli" figma verify --config nope.json 2>/dev/null)"
 code=$?
 set -e
 test "$code" -eq 2 || { echo "expected exit 2 from an unimplemented command, got $code" >&2; exit 1; }
@@ -52,12 +55,66 @@ test -f "$installed/schemas/sync-ledger.schema.json"
 test -f "$installed/profiles/example.json"
 test -f "$installed/src/validate/artifact.mjs"
 
-# Nothing shipped as data may carry a consumer's namespace out into the world.
-for dir in schemas skills templates profiles; do
-  if grep -rqi 'collider' "$installed/$dir"; then
-    echo "installed $dir/ names a consumer" >&2; exit 1
+# The rail commands, run from the installed package against records it ships.
+# Implemented is not the same claim as installed-and-working: a module that
+# resolves in the development tree can be absent from the tarball.
+ledgers="$installed/src/figma/__fixtures__/sync-ledger"
+profile="$installed/src/figma/__fixtures__/profiles/consumer-a.json"
+test -f "$profile" || { echo "the fixture profile did not survive packing" >&2; exit 1; }
+
+# 0 — evaluated and conformant, with a parseable result on stdout.
+out="$("$cli" ledger validate --ledger "$ledgers/valid.sync-ledger.json" --profile "$profile" --json)"
+node -e '
+  const r = JSON.parse(process.argv[1]);
+  if (r.resultVersion !== "1") throw new Error("resultVersion is not 1");
+  if (r.ok !== true) throw new Error("expected a conformant result");
+  if (Object.keys(r.evidence).length !== 9) throw new Error("evidence is not the nine keys");
+  if (r.rail.sourceVersionOrRevision.indexOf("ledgerVersion:3") !== 0) throw new Error("rail projection missing");
+' "$out"
+
+"$cli" ledger parity --ledger "$ledgers/valid-required.sync-ledger.json" --profile "$profile" >/dev/null
+"$cli" proof validate --proof "$installed/src/figma/__fixtures__/publish-proof/valid-plugin-import-manual.publish-proof.json" --profile "$profile" >/dev/null
+
+# 1 — evaluated and NOT conformant. The result must still be on stdout: that
+# payload is the reason --json exists, and a caller that discards stdout on a
+# non-zero exit throws away the diagnosis.
+set +e
+out="$("$cli" ledger validate --ledger "$ledgers/invalid-deferred-complete.sync-ledger.json" --profile "$profile" --json 2>/dev/null)"
+code=$?
+set -e
+test "$code" -eq 1 || { echo "expected exit 1 for a nonconformant ledger, got $code" >&2; exit 1; }
+node -e '
+  const r = JSON.parse(process.argv[1]);
+  if (r.ok !== false) throw new Error("expected ok:false");
+  if (r.diagnostics.length === 0) throw new Error("a nonconformant result carried no diagnostics");
+  if (r.diagnostics.some((d) => d.code.includes("["))) throw new Error("diagnostic codes carry human punctuation");
+' "$out"
+
+# 2 — could not evaluate. Nothing on stdout at all, so the absence of an answer
+# can never be parsed as an empty one.
+set +e
+out="$("$cli" ledger validate --ledger "$ledgers/absent.json" --profile "$profile" --json 2>/dev/null)"
+code=$?
+set -e
+test "$code" -eq 2 || { echo "expected exit 2 for a missing ledger, got $code" >&2; exit 1; }
+test -z "$out" || { echo "could-not-evaluate wrote to stdout: $out" >&2; exit 1; }
+
+# Nothing shipped may carry a consumer's namespace out into the world. This
+# covers src/ as well as the data directories, because the fixtures under
+# src/figma/__fixtures__ shipped a real Figma file key until T12.
+# boundary.test.ts is excluded for the one reason a file may name a consumer:
+# it is the test that forbids it, and it has to say the word to look for it.
+# The Figma-key check below has no such exemption — a test may name a repo, but
+# nothing may embed a real file key.
+for dir in schemas skills templates profiles src; do
+  named="$(grep -rli 'collider' "$installed/$dir" | grep -v '/boundary\.test\.ts$' || true)"
+  if [ -n "$named" ]; then
+    echo "installed $dir/ names a consumer: $named" >&2; exit 1
   fi
 done
+if grep -rqE 'figma://file/[A-Za-z0-9]{18,}' "$installed"; then
+  echo "installed package embeds a real Figma file key" >&2; exit 1
+fi
 
 # The two ai-elements skills stay with the consumer: a design-system tooling
 # package has no business shipping a third-party component library's docs, and a

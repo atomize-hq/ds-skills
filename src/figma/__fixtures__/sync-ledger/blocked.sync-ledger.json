@@ -1,5 +1,5 @@
 {
-  "ledgerVersion": "2",
+  "ledgerVersion": "3",
   "artifact": {
     "path": "design-tokens/dist/figma/tokens.json",
     "revision": "5555555555555555555555555555555555555555"
@@ -7,7 +7,7 @@
   "publish": {
     "mode": "plugin-import-manual",
     "tokensStudioCarrier": false,
-    "figmaFile": "figma://file/fixture-blocked-sync-ledger"
+    "figmaFile": "figma://file/fixture-consumer-a"
   },
   "verification": {
     "materializationStatus": "failed",
@@ -26,5 +26,9 @@
       "status": "open",
       "field": "verification.materializationStatus"
     }
-  ]
+  ],
+  "publication": {
+    "proof": "./blocked.publish-proof.json",
+    "sha256": "c04b11f0f2f3dbe31c8b6533c903ab3d67a3a539242f54671700ae88818b1c7e"
+  }
 }

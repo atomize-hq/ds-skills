@@ -42,15 +42,10 @@ describe("the package does not reach into a consumer", () => {
   // Modules only. A fixture naming a consumer is sample data and is fine; a
   // portable validator naming one is the defect this migration exists to remove.
   //
-  // This allowlist is the debt ledger for T12's constant generalization. It may
-  // only ever shrink: a NEW module naming a consumer fails immediately, and when
-  // T12 finishes, this list is empty and the entry below is deleted.
-  const knownConsumerNaming = new Map([
-    [
-      "publish-proof.mjs",
-      "publishProofPilotName / publishProofPilotFile — §4.5 rows 1-2, owned by T12",
-    ],
-  ]);
+  // Emptied by T12: the constants moved onto the profile, so no module names a
+  // consumer any more. Kept as an empty ledger rather than deleted, because the
+  // check below is what stops a new entry being added without a reason.
+  const knownConsumerNaming = new Map<string, string>();
 
   it("names no consumer repository path, outside the recorded debt", () => {
     const offenders: string[] = [];
@@ -77,5 +72,78 @@ describe("the package does not reach into a consumer", () => {
       }
     }
     expect(stale).toEqual([]);
+  });
+});
+
+/**
+ * A separate concern from the coupling check above, and it was missed by one:
+ * that check reads modules only, on the reasoning that "a fixture naming a
+ * consumer is sample data". That reasoning holds for coupling and fails for
+ * disclosure — the package's fixtures carried a real Figma file key and a real
+ * repository name into a PUBLIC repository, where sample data is published data.
+ */
+describe("the package discloses no consumer's identity", () => {
+  const packagedDirs = [
+    "bin",
+    "plugin",
+    "profiles",
+    "schemas",
+    "skills",
+    "src",
+    "templates",
+  ];
+
+  function packagedFiles(): string[] {
+    const root = path.resolve(here, "../..");
+    const out: string[] = [];
+    const walk = (dir: string) => {
+      if (!fs.existsSync(dir)) return;
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (entry.isSymbolicLink()) continue;
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) walk(full);
+        else out.push(full);
+      }
+    };
+    for (const dir of packagedDirs) walk(path.join(root, dir));
+    // This file has to name what it forbids in order to look for it.
+    return out.filter((file) => file !== fileURLToPath(import.meta.url));
+  }
+
+  /** Text content, or null for anything that cannot carry a readable name. */
+  function textOf(file: string): string | null {
+    let buffer: Buffer;
+    try {
+      buffer = fs.readFileSync(file);
+    } catch {
+      return null;
+    }
+    if (buffer.includes(0)) return null;
+    return buffer.toString("utf8");
+  }
+
+  it("has files to check, so a layout change cannot make this vacuous", () => {
+    const files = packagedFiles();
+    expect(files.length).toBeGreaterThan(20);
+    expect(files.filter((f) => textOf(f) !== null).length).toBeGreaterThan(20);
+  });
+
+  it("embeds no real Figma file key", () => {
+    // Real keys are ~22 unbroken alphanumerics. Every fixture destination is
+    // hyphenated, so a fixture cannot collide with one.
+    const realKey = /figma:[/][/]file[/][A-Za-z0-9]{18,}/;
+    const offenders = packagedFiles().filter((file) => {
+      const text = textOf(file);
+      return text !== null && realKey.test(text);
+    });
+    expect(offenders).toEqual([]);
+  });
+
+  it("names no consumer repository in any shipped file", () => {
+    const offenders = packagedFiles().filter((file) => {
+      const text = textOf(file);
+      return text !== null && /\bcollider\b/i.test(text);
+    });
+    expect(offenders).toEqual([]);
   });
 });

@@ -1,0 +1,21 @@
+{
+  "proofVersion": "1",
+  "mode": "plugin-import-manual",
+  "artifact": {
+    "path": "build/design-tokens.json",
+    "gitSha": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+  },
+  "destination": {
+    "name": "Fixture Consumer B",
+    "figmaFile": "figma://file/fixture-consumer-b"
+  },
+  "materialization": {
+    "status": "passed",
+    "attemptedAt": "2026-04-02T09:15:00Z"
+  },
+  "carrier": {
+    "used": false,
+    "reason": null,
+    "exitExpectation": null
+  }
+}

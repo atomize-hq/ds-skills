@@ -1,5 +1,5 @@
 {
-  "ledgerVersion": "2",
+  "ledgerVersion": "3",
   "artifact": {
     "path": "design-tokens/dist/figma/tokens.json",
     "revision": "2222222222222222222222222222222222222222"
@@ -7,7 +7,7 @@
   "publish": {
     "mode": "plugin-import-manual",
     "tokensStudioCarrier": false,
-    "figmaFile": "figma://file/fixture-invalid-contradictory"
+    "figmaFile": "figma://file/fixture-consumer-a"
   },
   "verification": {
     "materializationStatus": "passed",
@@ -18,5 +18,9 @@
     "parityDeferredReason": "This fixture should fail because required parity cannot carry a deferred reason.",
     "highestEarnedLevel": "E-promotion-complete"
   },
-  "exceptions": []
+  "exceptions": [],
+  "publication": {
+    "proof": "./invalid-contradictory-mode.publish-proof.json",
+    "sha256": "9b23493f65ad7b6522f05e9b49749aaefd00aa1f09ca491dcf70b2590aaa0e57"
+  }
 }

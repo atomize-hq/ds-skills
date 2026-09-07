@@ -17,15 +17,14 @@ files you want to shape-check before committing.
 Replacing a repo's own validators. It checks shape only — it cannot see cross-field rules, the
 filesystem, or other files, and `../schemas/README.md` lists exactly what it therefore misses.
 
-**In Collider it is not the gate.** The authority is `scripts/lib/*.mjs`, wired through
-`package.json` and covered by contract tests in `storybook/`. Run those:
+**Where a repo has its own semantic validators, those are the gate, not this.** This one sees
+shape; they see cross-field rules, the filesystem and referential integrity. For the token rail
+specifically, the semantic gate ships in this package as its own commands:
 
 ```bash
-pnpm validate:sync-ledger
-pnpm validate:storybook-story-inventory
-pnpm validate:storybook-policy
-pnpm validate:storybook-tier-policy
-pnpm validate:storybook-proof-structure
+ds-skills ledger validate --ledger <path> --profile <path>
+ds-skills ledger parity   --ledger <path> --profile <path>
+ds-skills proof validate  --proof  <path> --profile <path>
 ```
 
 This directory previously held three forks of those validators. They drifted for six months,

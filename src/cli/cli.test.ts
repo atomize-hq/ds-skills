@@ -85,16 +85,26 @@ describe("help and version answer without touching a repository", () => {
 
 describe("failure behaviour", () => {
   it("an unimplemented command exits non-zero and says so", () => {
+    // `figma verify` is T13's; T12 implemented the four rail commands only.
     const { code, out, err } = capture([
-      "ledger",
-      "validate",
-      "--ledger",
+      "figma",
+      "verify",
+      "--config",
       "x.json",
     ]);
     expect(code).toBe(EXIT_CANNOT_EVALUATE);
     expect(err).toContain("[CLI_COMMAND_NOT_IMPLEMENTED]");
     // The whole point: dispatching nine commands must not mean nine successful
     // placeholders, and nothing may reach stdout for a caller to parse.
+    expect(out).toBe("");
+  });
+
+  it("a missing required option is could-not-evaluate, not a failed check", () => {
+    const { code, out, err } = capture(["ledger", "validate", "--json"]);
+    expect(code).toBe(EXIT_CANNOT_EVALUATE);
+    expect(err).toContain("[CLI_INVALID_ARGUMENTS]");
+    // Exit 2 emits nothing, so a caller parsing stdout cannot mistake the
+    // absence of an answer for an empty result.
     expect(out).toBe("");
   });
 

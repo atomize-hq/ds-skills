@@ -2,8 +2,10 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
+import { CannotEvaluateError, portablePublishModes } from "./profile.mjs";
+
 export const syncLedgerUsage =
-  "Usage: node scripts/validate-sync-ledger.mjs <path-to-sync-ledger.json>";
+  "Usage: ds-skills ledger validate --ledger <path> --profile <path>";
 export const syncLedgerStates = new Set([
   "declared",
   "verified-current",
@@ -19,6 +21,12 @@ export const topLevelKeys = [
   "promotion",
   "exceptions",
 ];
+/**
+ * Conditionally required, per the boundary contract §4.3: forbidden when
+ * materialization has not run, required when it has. Adding it is what moves
+ * `ledgerVersion` 2 -> 3.
+ */
+export const publicationKeys = ["proof", "sha256"];
 export const artifactKeys = ["path", "revision"];
 export const publishKeys = ["mode", "tokensStudioCarrier", "figmaFile"];
 export const verificationKeys = [
@@ -28,11 +36,8 @@ export const verificationKeys = [
 export const basePromotionKeys = ["parityMode", "highestEarnedLevel"];
 export const exceptionRequiredKeys = ["code", "message", "blocking", "status"];
 export const exceptionOptionalKeys = ["field"];
-export const syncLedgerArtifactPath = "design-tokens/dist/figma/tokens.json";
-export const publishModes = new Set([
-  "plugin-import-manual",
-  "tokens-studio-carried",
-]);
+export const supportedLedgerVersion = "3";
+export const publishModes = new Set(portablePublishModes);
 export const materializationStatuses = new Set(["not-run", "passed", "failed"]);
 export const parityModes = new Set(["deferred", "required"]);
 export const earnedLevels = new Set([
@@ -45,27 +50,42 @@ export const earnedLevels = new Set([
 export const exceptionStatuses = new Set(["open", "resolved"]);
 
 const shaPattern = /^[a-f0-9]{40}$/;
+const digestPattern = /^[a-f0-9]{64}$/;
 const publishValidLevels = new Set(["D-publish-valid", "E-promotion-complete"]);
 
 export function readSyncLedger(target) {
   const absPath = path.resolve(target);
-  return {
-    absPath,
-    data: JSON.parse(fs.readFileSync(absPath, "utf8")),
-  };
+  let text;
+  try {
+    text = fs.readFileSync(absPath, "utf8");
+  } catch {
+    throw new CannotEvaluateError(
+      "LEDGER_UNREADABLE",
+      `sync ledger could not be read: ${absPath}`,
+    );
+  }
+
+  try {
+    return { absPath, data: JSON.parse(text) };
+  } catch (error) {
+    throw new CannotEvaluateError(
+      "LEDGER_MALFORMED",
+      `sync ledger is not valid JSON: ${absPath} (${error.message})`,
+    );
+  }
 }
 
-export function loadAndValidateSyncLedger(target) {
+export function loadAndValidateSyncLedger(target, profile) {
   const { absPath, data } = readSyncLedger(target);
   return {
     absPath,
     data,
-    errors: validateSyncLedger(data),
+    errors: validateSyncLedger(data, profile),
   };
 }
 
-export function validateSyncLedgerWithState(target) {
-  const { absPath, data, errors } = loadAndValidateSyncLedger(target);
+export function validateSyncLedgerWithState(target, profile) {
+  const { absPath, data, errors } = loadAndValidateSyncLedger(target, profile);
   return {
     absPath,
     data,
@@ -75,7 +95,8 @@ export function validateSyncLedgerWithState(target) {
   };
 }
 
-export function validateSyncLedger(data) {
+export function validateSyncLedger(data, profile) {
+  requireProfile(profile);
   const errors = [];
 
   assertPlainObject(errors, data, "Ledger must be a JSON object");
@@ -83,13 +104,24 @@ export function validateSyncLedger(data) {
     return errors;
   }
 
-  validateExactKeys(errors, data, topLevelKeys, "ledger");
-  requireLiteral(errors, data.ledgerVersion, "2", "ledgerVersion");
-  validateArtifact(errors, data.artifact);
-  validatePublish(errors, data.publish);
+  validateKeySpec(
+    errors,
+    data,
+    { required: topLevelKeys, optional: ["publication"] },
+    "ledger",
+  );
+  requireLiteral(
+    errors,
+    data.ledgerVersion,
+    supportedLedgerVersion,
+    "ledgerVersion",
+  );
+  validateArtifact(errors, data.artifact, profile);
+  validatePublish(errors, data.publish, profile);
   validateVerification(errors, data.verification);
   validatePromotion(errors, data.promotion);
   validateExceptions(errors, data.exceptions);
+  validatePublication(errors, data);
   validateLedgerGuardrails(errors, data);
 
   return errors;
@@ -185,7 +217,10 @@ export function runValidateSyncLedgerCli(options = {}) {
   }
 
   try {
-    const { absPath, errors, evaluation } = runValidation(args[0]);
+    const { absPath, errors, evaluation } = runValidation(
+      args[0],
+      options.profile,
+    );
 
     if (errors.length > 0) {
       for (const error of errors) {
@@ -219,7 +254,7 @@ export function runValidateSyncLedgerCli(options = {}) {
   }
 }
 
-function validateArtifact(errors, artifact) {
+function validateArtifact(errors, artifact, profile) {
   if (!assertPlainObject(errors, artifact, "artifact must be an object")) {
     return;
   }
@@ -230,16 +265,11 @@ function validateArtifact(errors, artifact) {
     { required: artifactKeys, optional: [] },
     "artifact",
   );
-  requireLiteral(
-    errors,
-    artifact.path,
-    syncLedgerArtifactPath,
-    "artifact.path",
-  );
+  requireLiteral(errors, artifact.path, profile.artifactPath, "artifact.path");
   requireSha(errors, artifact.revision, "artifact.revision");
 }
 
-function validatePublish(errors, publish) {
+function validatePublish(errors, publish, profile) {
   if (!assertPlainObject(errors, publish, "publish must be an object")) {
     return;
   }
@@ -251,9 +281,9 @@ function validatePublish(errors, publish) {
     "publish",
   );
 
-  if (!publishModes.has(publish.mode)) {
+  if (!profile.publishModes.includes(publish.mode)) {
     errors.push(
-      "[CT-8B_INVALID_PUBLISH_MODE] publish.mode must be plugin-import-manual or tokens-studio-carried",
+      `[CT-8B_INVALID_PUBLISH_MODE] publish.mode must be one of: ${profile.publishModes.join(", ")}`,
     );
   }
 
@@ -408,6 +438,73 @@ function validateExceptions(errors, exceptions) {
   }
 }
 
+/**
+ * Presence, absence and shape only. Whether the named proof exists, matches its
+ * digest and agrees with this ledger is the binding check's question, because
+ * answering it needs a second file — see publication-binding.mjs.
+ */
+function validatePublication(errors, ledger) {
+  const status = ledger.verification?.materializationStatus;
+  const publication = ledger.publication;
+
+  if (status === "not-run") {
+    if (publication !== undefined) {
+      errors.push(
+        "[CT-8B_NOT_RUN_FORBIDS_PUBLICATION] publication must be absent when verification.materializationStatus is not-run",
+      );
+    }
+    return;
+  }
+
+  if (status === "passed" || status === "failed") {
+    if (publication === undefined) {
+      errors.push(
+        "[CT-8B_MATERIALIZATION_REQUIRES_PUBLICATION] publication is required when verification.materializationStatus is passed or failed",
+      );
+      return;
+    }
+  } else if (publication === undefined) {
+    // The status itself is already invalid; do not pile on.
+    return;
+  }
+
+  if (
+    !assertPlainObject(errors, publication, "publication must be an object")
+  ) {
+    return;
+  }
+
+  validateKeySpec(
+    errors,
+    publication,
+    { required: publicationKeys, optional: [] },
+    "publication",
+  );
+  requireNonEmptyString(errors, publication.proof, "publication.proof");
+
+  if (
+    typeof publication.sha256 !== "string" ||
+    !digestPattern.test(publication.sha256)
+  ) {
+    errors.push(
+      "[CT-8B_INVALID_PUBLICATION_DIGEST] publication.sha256 must be a 64-character lowercase sha256 digest",
+    );
+  }
+}
+
+function requireProfile(profile) {
+  if (
+    profile === undefined ||
+    profile === null ||
+    typeof profile.artifactPath !== "string"
+  ) {
+    throw new CannotEvaluateError(
+      "PROFILE_REQUIRED",
+      "validateSyncLedger requires a resolved profile; see readProfile()",
+    );
+  }
+}
+
 function validateLedgerGuardrails(errors, ledger) {
   const { artifact, verification, promotion, exceptions } = ledger;
 
@@ -479,20 +576,6 @@ function assertPlainObject(errors, value, message) {
   }
 
   return true;
-}
-
-function validateExactKeys(errors, value, expectedKeys, label) {
-  const actualKeys = Object.keys(value).sort();
-  const sortedExpectedKeys = [...expectedKeys].sort();
-
-  if (
-    actualKeys.length !== sortedExpectedKeys.length ||
-    actualKeys.some((key, index) => key !== sortedExpectedKeys[index])
-  ) {
-    errors.push(
-      `[CT-8B_INVALID_KEYS] ${label} must contain exactly: ${sortedExpectedKeys.join(", ")}`,
-    );
-  }
 }
 
 function validateKeySpec(errors, value, keySpec, label) {

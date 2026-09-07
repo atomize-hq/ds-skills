@@ -64,26 +64,26 @@ export const commands: readonly CommandSpec[] = [
   {
     path: ["ledger", "validate"],
     summary: "Validate a sync ledger and its relationship to the publish proof",
-    usage: "ds-skills ledger validate --ledger <path> --profile <name>",
+    usage: "ds-skills ledger validate --ledger <path> --profile <path>",
     machineReadable: true,
     effect: "read-only",
-    implemented: false,
+    implemented: true,
   },
   {
     path: ["ledger", "parity"],
     summary: "Evaluate the parity promotion policy over a sync ledger",
-    usage: "ds-skills ledger parity --ledger <path> --profile <name>",
+    usage: "ds-skills ledger parity --ledger <path> --profile <path>",
     machineReadable: true,
     effect: "read-only",
-    implemented: false,
+    implemented: true,
   },
   {
     path: ["proof", "validate"],
     summary: "Validate a publish proof in isolation",
-    usage: "ds-skills proof validate --proof <path> --profile <name>",
+    usage: "ds-skills proof validate --proof <path> --profile <path>",
     machineReadable: true,
     effect: "read-only",
-    implemented: false,
+    implemented: true,
   },
   {
     path: ["validate"],
@@ -91,7 +91,7 @@ export const commands: readonly CommandSpec[] = [
     usage: "ds-skills validate <schema> <instance> [--profile <path>]",
     machineReadable: false,
     effect: "read-only",
-    implemented: false,
+    implemented: true,
   },
 ];
 

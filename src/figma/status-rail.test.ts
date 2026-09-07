@@ -4,8 +4,24 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
+import { fixtureProfile } from "./__fixtures__/support.js";
 import { loadAndValidateSyncLedger } from "./sync-ledger.mjs";
 import { evaluateStatusRail } from "./status-rail.mjs";
+
+const profile = fixtureProfile();
+
+/**
+ * The captured baseline reads `ledgerVersion:2`. T12 moved the ledger schema to
+ * v3, which changes this one string and nothing else the rail reports. It is
+ * substituted here rather than rewritten into the baseline file, so the pre-move
+ * capture stays a pre-move capture — a rebaseline would make the reconciliation
+ * unfalsifiable.
+ */
+const V2_TO_V3 = ["ledgerVersion:2|", "ledgerVersion:3|"] as const;
+
+function reconciled(sourceVersionOrRevision: string): string {
+  return sourceVersionOrRevision.replace(V2_TO_V3[0], V2_TO_V3[1]);
+}
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ledgerFixtures = path.join(here, "__fixtures__/sync-ledger");
@@ -42,6 +58,24 @@ describe("evaluateStatusRail reproduces the pre-move rail", () => {
     expect(Object.keys(baseline).sort()).toEqual(fixtureNames);
   });
 
+  // The second reconciliation, as an assertion rather than a claim in a table:
+  // the version segment is the ONLY thing T12 was allowed to change here. A
+  // moved revision would mean a fixture changed identity under cover of the
+  // schema bump.
+  it("differs from the pre-move capture in the version segment alone", () => {
+    for (const [name, expected] of Object.entries(baseline)) {
+      const [version, revision] = expected.sourceVersionOrRevision.split("|");
+      if (expected.freshness === "missing") {
+        expect(expected.sourceVersionOrRevision, name).toBe("unavailable");
+        continue;
+      }
+      expect(version, name).toBe("ledgerVersion:2");
+      expect(reconciled(expected.sourceVersionOrRevision), name).toBe(
+        `ledgerVersion:3|${revision}`,
+      );
+    }
+  });
+
   for (const name of fixtureNames) {
     const expected = baseline[name]!;
 
@@ -54,6 +88,7 @@ describe("evaluateStatusRail reproduces the pre-move rail", () => {
     it(`${name} — ${evaluable ? "evaluates identically" : "is rejected before evaluation"}`, () => {
       const loaded = loadAndValidateSyncLedger(
         path.join(ledgerFixtures, `${name}.sync-ledger.json`),
+        profile,
       );
 
       if (!evaluable) {
@@ -67,7 +102,7 @@ describe("evaluateStatusRail reproduces the pre-move rail", () => {
       expect(rail.freshness).toBe(expected.freshness);
       expect(rail.outcome).toBe(expected.outcome);
       expect(rail.sourceVersionOrRevision).toBe(
-        expected.sourceVersionOrRevision,
+        reconciled(expected.sourceVersionOrRevision),
       );
       expect(rail.reasonCodes).toEqual(expected.statusReasonCodes);
     });
@@ -81,6 +116,7 @@ describe("the reason-code ordering the consumer depends on", () => {
     // outcome stayed identical — a silent change to what a reviewer is told.
     const loaded = loadAndValidateSyncLedger(
       path.join(ledgerFixtures, "stale.sync-ledger.json"),
+      profile,
     );
     const rail = evaluateStatusRail(loaded.data);
 
@@ -93,6 +129,7 @@ describe("the projection carries what the consumer reads off the ledger directly
   it("exposes parityMode and highestEarnedLevel as evidence", () => {
     const loaded = loadAndValidateSyncLedger(
       path.join(ledgerFixtures, "valid-required.sync-ledger.json"),
+      profile,
     );
     const rail = evaluateStatusRail(loaded.data);
 

@@ -1,0 +1,25 @@
+{
+  "ledgerVersion": "3",
+  "artifact": {
+    "path": "build/design-tokens.json",
+    "revision": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+  },
+  "publish": {
+    "mode": "plugin-import-manual",
+    "tokensStudioCarrier": false,
+    "figmaFile": "figma://file/fixture-consumer-b"
+  },
+  "verification": {
+    "materializationStatus": "passed",
+    "lastVerifiedRevision": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+  },
+  "promotion": {
+    "parityMode": "required",
+    "highestEarnedLevel": "E-promotion-complete"
+  },
+  "exceptions": [],
+  "publication": {
+    "proof": "./publish-proof.json",
+    "sha256": "f8f3ff76879f25443402b7d5654fc4a91f9cf823c2e5e12cb8bc0f91558d1b8e"
+  }
+}
