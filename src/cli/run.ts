@@ -1,6 +1,8 @@
 import { CannotEvaluateError } from "../figma/profile.mjs";
 import { runValidateArtifactCli } from "../validate/artifact.mjs";
 import { commands, type CommandSpec } from "./commands.js";
+import { runFigmaCommand } from "./figma.js";
+import { PluginBuildError } from "../plugin/build.js";
 import {
   EXIT_CANNOT_EVALUATE,
   EXIT_NONCONFORMANT,
@@ -25,7 +27,7 @@ export interface CliIo {
   readonly stderr?: { write(chunk: string): unknown };
 }
 
-export function runCli(io: CliIo): number {
+export async function runCli(io: CliIo): Promise<number> {
   const stdout = io.stdout ?? process.stdout;
   const stderr = io.stderr ?? process.stderr;
   const invocation = parseArgv(io.argv);
@@ -79,18 +81,21 @@ type Streams = {
   stderr: { write(chunk: string): unknown };
 };
 
-function runCommand(
+async function runCommand(
   command: CommandSpec,
   options: Readonly<Record<string, string>>,
   rest: readonly string[],
   json: boolean,
   io: Streams,
-): number {
+): Promise<number> {
   const name = command.path.join(" ");
 
   try {
     if (name === "validate") {
       return runValidateArtifactCli([...rest, ...profileArgs(options)], io);
+    }
+    if (name.startsWith("figma ")) {
+      return await runFigmaCommand(name, options, io);
     }
 
     const railOptions: RailOptions = {
@@ -112,6 +117,11 @@ function runCommand(
     if (error instanceof CannotEvaluateError) {
       io.stderr.write(`[${error.code}] ${error.message}\n`);
       return EXIT_CANNOT_EVALUATE;
+    }
+    if (error instanceof PluginBuildError) {
+      // An evaluated failure of the build, not an inability to run it.
+      io.stderr.write(`[RAIL_PLUGIN_BUILD_FAILED] ${error.message}\n`);
+      return EXIT_NONCONFORMANT;
     }
     if (error instanceof CliArgumentError) {
       io.stderr.write(

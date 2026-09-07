@@ -20,10 +20,10 @@ const fixtures = fileURLToPath(
 const profileA = path.join(fixtures, "profiles/consumer-a.json");
 const ledgers = path.join(fixtures, "sync-ledger");
 
-function capture(argv: readonly string[]) {
+async function capture(argv: readonly string[]) {
   let out = "";
   let err = "";
-  const code = runCli({
+  const code = await runCli({
     argv,
     version: "0.0.0-test",
     stdout: { write: (chunk: string) => (out += chunk) },
@@ -32,8 +32,8 @@ function capture(argv: readonly string[]) {
   return { code, out, err };
 }
 
-function validateJson(ledger: string, profile = profileA) {
-  const { code, out, err } = capture([
+async function validateJson(ledger: string, profile = profileA) {
+  const { code, out, err } = await capture([
     "ledger",
     "validate",
     "--ledger",
@@ -82,8 +82,8 @@ afterAll(() => {
 });
 
 describe("the --json result is a versioned interface", () => {
-  it("declares its own version, independent of the ledger's", () => {
-    const { result } = validateJson(
+  it("declares its own version, independent of the ledger's", async () => {
+    const { result } = await validateJson(
       path.join(ledgers, "valid.sync-ledger.json"),
     );
     expect(result.resultVersion).toBe("1");
@@ -92,8 +92,8 @@ describe("the --json result is a versioned interface", () => {
     expect(result.rail.sourceVersionOrRevision).toContain("ledgerVersion:3");
   });
 
-  it("carries the nine evidence keys in a fixed order", () => {
-    const { result } = validateJson(
+  it("carries the nine evidence keys in a fixed order", async () => {
+    const { result } = await validateJson(
       path.join(ledgers, "valid.sync-ledger.json"),
     );
     expect(Object.keys(result.evidence)).toEqual([
@@ -109,8 +109,8 @@ describe("the --json result is a versioned interface", () => {
     ]);
   });
 
-  it("emits byte-identical output for the same input", () => {
-    const first = capture([
+  it("emits byte-identical output for the same input", async () => {
+    const first = await capture([
       "ledger",
       "validate",
       "--ledger",
@@ -119,7 +119,7 @@ describe("the --json result is a versioned interface", () => {
       profileA,
       "--json",
     ]);
-    const second = capture([
+    const second = await capture([
       "ledger",
       "validate",
       "--ledger",
@@ -131,8 +131,8 @@ describe("the --json result is a versioned interface", () => {
     expect(first.out).toBe(second.out);
   });
 
-  it("uses bare diagnostic codes, without the human bracket punctuation", () => {
-    const { result } = validateJson(
+  it("uses bare diagnostic codes, without the human bracket punctuation", async () => {
+    const { result } = await validateJson(
       path.join(ledgers, "invalid-deferred-complete.sync-ledger.json"),
     );
     for (const diagnostic of result.diagnostics) {
@@ -144,8 +144,8 @@ describe("the --json result is a versioned interface", () => {
     );
   });
 
-  it("puts nothing but the result on stdout", () => {
-    const { out } = capture([
+  it("puts nothing but the result on stdout", async () => {
+    const { out } = await capture([
       "ledger",
       "validate",
       "--ledger",
@@ -159,18 +159,18 @@ describe("the --json result is a versioned interface", () => {
 });
 
 describe("exit codes separate an answer from the absence of one", () => {
-  it("0 — evaluated and conformant", () => {
-    const { code, result } = validateJson(
+  it("0 — evaluated and conformant", async () => {
+    const { code, result } = await validateJson(
       path.join(ledgers, "valid.sync-ledger.json"),
     );
     expect(code).toBe(EXIT_OK);
     expect(result.ok).toBe(true);
   });
 
-  it("1 — evaluated and NOT conformant, with the result still on stdout", () => {
+  it("1 — evaluated and NOT conformant, with the result still on stdout", async () => {
     // The payload on a failing run is the reason --json exists: a caller that
     // discards stdout on non-zero exit throws away the diagnosis.
-    const { code, result } = validateJson(brokenBinding);
+    const { code, result } = await validateJson(brokenBinding);
     expect(code).toBe(EXIT_NONCONFORMANT);
     expect(emitsMachineResult(code)).toBe(true);
     expect(result.ok).toBe(false);
@@ -179,7 +179,7 @@ describe("exit codes separate an answer from the absence of one", () => {
     );
   });
 
-  it("2 — could not evaluate, and emits nothing at all", () => {
+  it("2 — could not evaluate, and emits nothing at all", async () => {
     for (const argv of [
       [
         "ledger",
@@ -201,7 +201,7 @@ describe("exit codes separate an answer from the absence of one", () => {
         "--json",
       ],
     ]) {
-      const { code, out, err } = capture(argv);
+      const { code, out, err } = await capture(argv);
       expect(code, argv.join(" ")).toBe(EXIT_CANNOT_EVALUATE);
       // The asymmetry is deliberate: a caller parsing stdout cannot mistake a
       // non-answer for an empty result.
@@ -213,10 +213,10 @@ describe("exit codes separate an answer from the absence of one", () => {
 });
 
 describe("the status projection replaces reading the records", () => {
-  it("answers every field the status caller reads today", () => {
+  it("answers every field the status caller reads today", async () => {
     // The hold point on this task: a caller gets its complete rail answer from
     // here without opening the ledger or the proof.
-    const { result } = validateJson(
+    const { result } = await validateJson(
       path.join(ledgers, "stale.sync-ledger.json"),
     );
     expect(result.rail).toEqual({
@@ -232,11 +232,11 @@ describe("the status projection replaces reading the records", () => {
     );
   });
 
-  it("reports a conformance blocker without failing a legitimate state", () => {
+  it("reports a conformance blocker without failing a legitimate state", async () => {
     // `verified-stale` is a real state, not a broken record. The pre-CLI
     // validator exited 0 here and so must this, or the migration tightens a
     // gate while claiming to move one.
-    const { code, result } = validateJson(
+    const { code, result } = await validateJson(
       path.join(ledgers, "stale.sync-ledger.json"),
     );
     expect(code).toBe(EXIT_OK);
@@ -246,8 +246,8 @@ describe("the status projection replaces reading the records", () => {
     ]);
   });
 
-  it("never reports a rail for a record it could not read", () => {
-    const { result } = validateJson(
+  it("never reports a rail for a record it could not read", async () => {
+    const { result } = await validateJson(
       path.join(ledgers, "invalid-contradictory-mode.sync-ledger.json"),
     );
     // The consumer's defect this replaces is exactly the opposite: an
@@ -259,8 +259,8 @@ describe("the status projection replaces reading the records", () => {
 });
 
 describe("proof validate and ledger parity stay independently invocable", () => {
-  it("validates a proof with no ledger in sight", () => {
-    const { code, out } = capture([
+  it("validates a proof with no ledger in sight", async () => {
+    const { code, out } = await capture([
       "proof",
       "validate",
       "--proof",
@@ -278,8 +278,8 @@ describe("proof validate and ledger parity stay independently invocable", () => 
     expect(result.ledgerPath).toBeNull();
   });
 
-  it("keeps parity a command of its own, not a side effect of validation", () => {
-    const { code, out } = capture([
+  it("keeps parity a command of its own, not a side effect of validation", async () => {
+    const { code, out } = await capture([
       "ledger",
       "parity",
       "--ledger",
@@ -292,8 +292,8 @@ describe("proof validate and ledger parity stay independently invocable", () => 
     expect(JSON.parse(out).command).toBe("ledger parity");
   });
 
-  it("fails parity for a deferred-but-required contradiction", () => {
-    const { code, out } = capture([
+  it("fails parity for a deferred-but-required contradiction", async () => {
+    const { code, out } = await capture([
       "ledger",
       "parity",
       "--ledger",
@@ -310,32 +310,32 @@ describe("proof validate and ledger parity stay independently invocable", () => 
 });
 
 describe("diagnostics say which evaluation produced them", () => {
-  it("distinguishes a malformed ledger from a proof that disagrees with a sound one", () => {
+  it("distinguishes a malformed ledger from a proof that disagrees with a sound one", async () => {
     // Without a phase, a caller has to pattern-match on the code prefix to tell
     // "this record is broken" from "these two records disagree" — two findings
     // with very different remedies.
-    const malformed = validateJson(
+    const malformed = await validateJson(
       path.join(ledgers, "invalid-deferred-complete.sync-ledger.json"),
     );
     expect(
       malformed.result.diagnostics.map((d: { phase: string }) => d.phase),
     ).toEqual(["ledger"]);
 
-    const disagreeing = validateJson(brokenBinding);
+    const disagreeing = await validateJson(brokenBinding);
     expect(
       disagreeing.result.diagnostics.map((d: { phase: string }) => d.phase),
     ).toEqual(["publication"]);
   });
 
-  it("marks a reported conformance blocker as conformance, not as a defect", () => {
-    const { result } = validateJson(
+  it("marks a reported conformance blocker as conformance, not as a defect", async () => {
+    const { result } = await validateJson(
       path.join(ledgers, "stale.sync-ledger.json"),
     );
     expect(result.diagnostics[0].phase).toBe("conformance");
   });
 
-  it("marks a standalone proof failure as proof", () => {
-    const { code, out } = capture([
+  it("marks a standalone proof failure as proof", async () => {
+    const { code, out } = await capture([
       "proof",
       "validate",
       "--proof",

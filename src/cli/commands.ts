@@ -24,42 +24,46 @@ export const commands: readonly CommandSpec[] = [
   {
     path: ["figma", "plugin", "build"],
     summary: "Generate the Figma plugin from a consumer config",
-    usage: "ds-skills figma plugin build --config <path>",
+    usage: "ds-skills figma plugin build --config <path> --out <dir>",
     machineReadable: false,
     effect: "writes",
-    implemented: false,
+    implemented: true,
   },
   {
     path: ["figma", "verify"],
     summary: "Compare a token artifact against reviewed baseline data",
-    usage: "ds-skills figma verify --config <path> --expect <path>",
+    usage:
+      "ds-skills figma verify --config <path> --expect <path> --artifact <path>",
     machineReadable: false,
     effect: "read-only",
-    implemented: false,
+    implemented: true,
   },
   {
     path: ["figma", "drift"],
     summary: "Report where observed Figma state has drifted from the artifact",
-    usage: "ds-skills figma drift --config <path>",
+    usage:
+      "ds-skills figma drift --config <path> --artifact <path> --observed <path>",
     machineReadable: false,
     effect: "read-only",
-    implemented: false,
+    implemented: true,
   },
   {
     path: ["figma", "serve"],
     summary: "Serve the token artifact for the plugin to fetch",
-    usage: "ds-skills figma serve --config <path>",
+    usage:
+      "ds-skills figma serve --config <path> --artifact <path> [--drift-out <path>] [--port <n>]",
     machineReadable: false,
     effect: "serves",
-    implemented: false,
+    implemented: true,
   },
   {
     path: ["figma", "baseline"],
     summary: "Capture or verify the manifest and rail baselines",
-    usage: "ds-skills figma baseline --config <path> --out <path>",
+    usage:
+      "ds-skills figma baseline --config <path> --artifact <path> --out <dir> [--check] [--force]",
     machineReadable: false,
     effect: "writes",
-    implemented: false,
+    implemented: true,
   },
   {
     path: ["ledger", "validate"],

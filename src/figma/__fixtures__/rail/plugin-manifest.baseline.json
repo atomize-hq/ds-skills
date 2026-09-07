@@ -1,0 +1,9 @@
+{
+  "source": "plugin-manifest.baseline.json",
+  "producedBy": "ds-skills figma plugin build",
+  "excludedFields": [],
+  "excludedFieldsRationale": "The manifest is a static template with three config substitutions. No timestamp, digest, path or version is interpolated into it, so no field is excluded and the comparison is literal.",
+  "byteLength": 369,
+  "sha256": "d12571606442cd64b0b9c679493ef8a9bd86018fad65fca1d3686e5560748eca",
+  "bytes": "{\n  \"name\": \"Design Token Sync\",\n  \"id\": \"design-token-sync-dev\",\n  \"api\": \"1.0.0\",\n  \"main\": \"code.js\",\n  \"ui\": \"ui.html\",\n  \"networkAccess\": {\n    \"allowedDomains\": [\"none\"],\n    \"reasoning\": \"Fetch the repo-generated token artifact from the local proof server during development.\",\n    \"devAllowedDomains\": [\"http://localhost:4173\"]\n  },\n  \"editorType\": [\"figma\"]\n}\n"
+}

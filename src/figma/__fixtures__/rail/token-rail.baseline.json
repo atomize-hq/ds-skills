@@ -1,0 +1,163 @@
+{
+  "source": "src/__fixtures__/artifact.json",
+  "collectionName": "Design Tokens",
+  "extensionsNamespace": "com.example.tokens",
+  "fallbackThemeId": "light",
+  "excludedFields": [],
+  "excludedFieldsRationale": "flattenTokenDocument walks the artifact in document order and buildExpectedVariables preserves it; every recorded value is resolved from committed token sources. Nothing is generated per run, so nothing is excluded.",
+  "summary": {
+    "leafCount": 12,
+    "firstLeaf": "accent/primary",
+    "lastLeaf": "type/weight/bold",
+    "defaultThemeId": "dark",
+    "themeIds": ["dark", "light"]
+  },
+  "variables": [
+    {
+      "name": "accent/primary",
+      "resolvedType": "COLOR",
+      "valuesByTheme": {
+        "dark": {
+          "r": 0.08235294117647059,
+          "g": 0.36470588235294116,
+          "b": 0.9882352941176471,
+          "a": 1
+        },
+        "light": {
+          "r": 0.11372549019607843,
+          "g": 0.3058823529411765,
+          "b": 0.8470588235294118,
+          "a": 1
+        }
+      }
+    },
+    {
+      "name": "accent/primary-foreground",
+      "resolvedType": "COLOR",
+      "valuesByTheme": {
+        "dark": {
+          "r": 0.9372549019607843,
+          "g": 0.9647058823529412,
+          "b": 1,
+          "a": 1
+        },
+        "light": {
+          "r": 0.9372549019607843,
+          "g": 0.9647058823529412,
+          "b": 1,
+          "a": 1
+        }
+      }
+    },
+    {
+      "name": "core/bg",
+      "resolvedType": "COLOR",
+      "valuesByTheme": {
+        "dark": {
+          "r": 0.0392156862745098,
+          "g": 0.0392156862745098,
+          "b": 0.0392156862745098,
+          "a": 1
+        },
+        "light": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        }
+      }
+    },
+    {
+      "name": "core/fg",
+      "resolvedType": "COLOR",
+      "valuesByTheme": {
+        "dark": {
+          "r": 0.9294117647058824,
+          "g": 0.9294117647058824,
+          "b": 0.9294117647058824,
+          "a": 1
+        },
+        "light": {
+          "r": 0.9294117647058824,
+          "g": 0.9294117647058824,
+          "b": 0.9294117647058824,
+          "a": 1
+        }
+      }
+    },
+    {
+      "name": "core/muted",
+      "resolvedType": "COLOR",
+      "valuesByTheme": {
+        "dark": {
+          "r": 0.47058823529411764,
+          "g": 0.47058823529411764,
+          "b": 0.5019607843137255,
+          "a": 0.36
+        },
+        "light": {
+          "r": 0.47058823529411764,
+          "g": 0.47058823529411764,
+          "b": 0.5019607843137255,
+          "a": 0.36
+        }
+      }
+    },
+    {
+      "name": "flags/dense",
+      "resolvedType": "BOOLEAN",
+      "valuesByTheme": {
+        "dark": false,
+        "light": false
+      }
+    },
+    {
+      "name": "layout/gutter",
+      "resolvedType": "FLOAT",
+      "valuesByTheme": {
+        "dark": 16,
+        "light": 16
+      }
+    },
+    {
+      "name": "motion/fast",
+      "resolvedType": "FLOAT",
+      "valuesByTheme": {
+        "dark": 120,
+        "light": 120
+      }
+    },
+    {
+      "name": "opacity/muted",
+      "resolvedType": "FLOAT",
+      "valuesByTheme": {
+        "dark": 0.7,
+        "light": 0.6
+      }
+    },
+    {
+      "name": "radius/md",
+      "resolvedType": "FLOAT",
+      "valuesByTheme": {
+        "dark": 8,
+        "light": 8
+      }
+    },
+    {
+      "name": "type/family/sans",
+      "resolvedType": "STRING",
+      "valuesByTheme": {
+        "dark": "Inter",
+        "light": "Inter"
+      }
+    },
+    {
+      "name": "type/weight/bold",
+      "resolvedType": "FLOAT",
+      "valuesByTheme": {
+        "dark": 700,
+        "light": 700
+      }
+    }
+  ]
+}

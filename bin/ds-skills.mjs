@@ -12,5 +12,5 @@ const manifest = JSON.parse(
 );
 
 process.exit(
-  runCli({ argv: process.argv.slice(2), version: manifest.version }),
+  await runCli({ argv: process.argv.slice(2), version: manifest.version }),
 );

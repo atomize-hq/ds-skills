@@ -32,17 +32,32 @@ mkdir -p "$work/elsewhere"
 ( cd "$work/elsewhere" && "$cli" --version >/dev/null )
 ( cd "$work/elsewhere" && "$cli" --help >/dev/null )
 
-# An unimplemented command must exit non-zero and print nothing on stdout: a
-# caller parsing stdout must not be able to read the silence as an empty result.
-# `figma verify` is T13's, so it is still the honest subject here — `ledger
-# validate` now exits 2 for a *different* reason (missing --profile), which
-# would have kept this assertion green while testing nothing it claims to.
-set +e
-out="$("$cli" figma verify --config nope.json 2>/dev/null)"
-code=$?
-set -e
-test "$code" -eq 2 || { echo "expected exit 2 from an unimplemented command, got $code" >&2; exit 1; }
-test -z "$out" || { echo "unimplemented command wrote to stdout: $out" >&2; exit 1; }
+# No placeholder commands. This assertion has been wrong twice: it ran
+# `ledger validate`, then `figma verify`, and each time the command it named got
+# implemented and the check stayed green for a different reason — a missing
+# required flag also exits 2 with an empty stdout. So it now asserts the
+# invariant instead of one command: every command refuses to run without its
+# arguments, and none of them reports itself as unimplemented.
+while read -r name; do
+  set +e
+  out="$("$cli" $name 2>/tmp/ds-skills-cmd.err)"
+  code=$?
+  set -e
+  test "$code" -ne 0 || { echo "\`$name\` with no arguments exited 0" >&2; exit 1; }
+  test -z "$out" || { echo "\`$name\` wrote to stdout with no arguments: $out" >&2; exit 1; }
+  if grep -q 'CLI_COMMAND_NOT_IMPLEMENTED' /tmp/ds-skills-cmd.err; then
+    echo "the release ships \`$name\` as a placeholder" >&2; exit 1
+  fi
+done <<'COMMANDS'
+figma plugin build
+figma verify
+figma drift
+figma serve
+figma baseline
+ledger validate
+ledger parity
+proof validate
+COMMANDS
 
 # The shipped assets, checked in the INSTALLED package rather than by reading
 # the files field — a files entry naming a directory that does not ship still
@@ -61,6 +76,60 @@ test -f "$installed/src/validate/artifact.mjs"
 ledgers="$installed/src/figma/__fixtures__/sync-ledger"
 profile="$installed/src/figma/__fixtures__/profiles/consumer-a.json"
 test -f "$profile" || { echo "the fixture profile did not survive packing" >&2; exit 1; }
+
+# The figma commands, run from the installed package against files it ships.
+artifact="$installed/src/__fixtures__/artifact.json"
+test -f "$artifact" || { echo "the artifact fixture did not survive packing" >&2; exit 1; }
+
+# Two entry points, one builder. `plugin/build.mjs` ran above; the CLI runs the
+# same code, so a manifest that differs between them means one of them has its
+# own copy of the substitution logic.
+"$cli" figma plugin build --config ./config.json --out ./plugin-cli >/dev/null
+cmp ./plugin-out/manifest.json ./plugin-cli/manifest.json || {
+  echo "the CLI and plugin/build.mjs produced different manifests" >&2; exit 1; }
+cmp ./plugin-out/ui.html ./plugin-cli/ui.html || {
+  echo "the CLI and plugin/build.mjs produced different ui.html" >&2; exit 1; }
+
+# Capture, re-check, and verify — the loop a consumer actually runs.
+"$cli" figma baseline --config ./config.json --artifact "$artifact" --out ./refs >/dev/null
+test -f ./refs/plugin-manifest.baseline.json
+test -f ./refs/token-rail.baseline.json
+"$cli" figma baseline --check --config ./config.json --artifact "$artifact" --out ./refs >/dev/null
+
+# An unchanged reference is left alone byte for byte, so a consumer's formatter
+# and a re-capture never fight over it.
+before="$(cat ./refs/token-rail.baseline.json)"
+"$cli" figma baseline --config ./config.json --artifact "$artifact" --out ./refs >/dev/null
+test "$before" = "$(cat ./refs/token-rail.baseline.json)" || {
+  echo "re-capturing an unchanged baseline rewrote it" >&2; exit 1; }
+
+"$cli" figma verify --config ./config.json --expect ./refs/token-rail.baseline.json \
+  --artifact "$artifact" >/dev/null
+
+# Verification must fail against data it does not describe, or a green run means
+# nothing. A one-variable baseline cannot match a twelve-variable artifact.
+node -e '
+  const fs = require("node:fs");
+  const b = JSON.parse(fs.readFileSync("./refs/token-rail.baseline.json", "utf8"));
+  b.variables = b.variables.slice(0, 1);
+  fs.writeFileSync("./refs/truncated.json", JSON.stringify(b, null, 2));
+'
+set +e
+"$cli" figma verify --config ./config.json --expect ./refs/truncated.json --artifact "$artifact" >/dev/null 2>&1
+code=$?
+set -e
+test "$code" -eq 1 || { echo "figma verify passed against a baseline it does not match (exit $code)" >&2; exit 1; }
+
+# `figma drift` never reads Figma itself, and says so rather than pretending it
+# could. Without --observed it cannot evaluate, and prints nothing on stdout.
+set +e
+out="$("$cli" figma drift --config ./config.json --artifact "$artifact" 2>/tmp/ds-skills-drift.err)"
+code=$?
+set -e
+test "$code" -eq 2 || { echo "expected exit 2 from figma drift with no observation, got $code" >&2; exit 1; }
+test -z "$out" || { echo "figma drift wrote to stdout with no observation" >&2; exit 1; }
+grep -q 'plugin session' /tmp/ds-skills-drift.err || {
+  echo "figma drift did not say where observed state comes from" >&2; exit 1; }
 
 # 0 — evaluated and conformant, with a parseable result on stdout.
 out="$("$cli" ledger validate --ledger "$ledgers/valid.sync-ledger.json" --profile "$profile" --json)"
