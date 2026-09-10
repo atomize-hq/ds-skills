@@ -185,6 +185,13 @@ installs it — including the negative cases, the five-platform matrix, and two 
 configured consumers. It needs `tokei` (the LOC guard) and `pwsh` (the Windows installer's
 tests); both fail loudly rather than being skipped.
 
+For release verification against private consumer identities, set
+`DS_SKILLS_PRIVATE_IDENTIFIERS_FILE` to an external, untracked local file before running
+`pnpm pack-check`. Put one nonempty literal identifier on each LF-terminated line, with no
+leading or trailing whitespace. The check performs case-insensitive fixed-string matching over
+every staged path and text file, including tests and fixtures; without that file it reports only
+the structural disclosure checks rather than claiming consumer-identity coverage.
+
 ```bash
 pnpm release:stage --release <new-version>   # stage candidate assets into ./release
 ```

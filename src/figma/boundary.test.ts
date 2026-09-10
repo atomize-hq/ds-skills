@@ -1,5 +1,7 @@
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
@@ -38,51 +40,14 @@ describe("the package does not reach into a consumer", () => {
     }
     expect(offenders).toEqual([]);
   });
-
-  // Modules only. A fixture naming a consumer is sample data and is fine; a
-  // portable validator naming one is the defect this migration exists to remove.
-  //
-  // Emptied by T12: the constants moved onto the profile, so no module names a
-  // consumer any more. Kept as an empty ledger rather than deleted, because the
-  // check below is what stops a new entry being added without a reason.
-  const knownConsumerNaming = new Map<string, string>();
-
-  it("names no consumer repository path, outside the recorded debt", () => {
-    const offenders: string[] = [];
-    for (const file of sourceFiles().filter((f) => f.endsWith(".mjs"))) {
-      const name = path.basename(file);
-      if (!/collider/i.test(fs.readFileSync(file, "utf8"))) continue;
-      if (knownConsumerNaming.has(name)) continue;
-      offenders.push(name);
-    }
-    expect(offenders).toEqual([]);
-  });
-
-  it("keeps the debt ledger honest — every allowlisted file still has the debt", () => {
-    // Otherwise the list outlives the problem and quietly permits a regression
-    // in a file that had been cleaned up.
-    const stale: string[] = [];
-    for (const [name] of knownConsumerNaming) {
-      const file = path.join(here, name);
-      if (
-        !fs.existsSync(file) ||
-        !/collider/i.test(fs.readFileSync(file, "utf8"))
-      ) {
-        stale.push(name);
-      }
-    }
-    expect(stale).toEqual([]);
-  });
 });
 
 /**
- * A separate concern from the coupling check above, and it was missed by one:
- * that check reads modules only, on the reasoning that "a fixture naming a
- * consumer is sample data". That reasoning holds for coupling and fails for
- * disclosure — the package's fixtures carried a real Figma file key and a real
- * repository name into a PUBLIC repository, where sample data is published data.
+ * A separate concern from the coupling check above: shipped fixtures and tests
+ * are published data too. Identity names stay outside this public package, in a
+ * release owner's local identifier list.
  */
-describe("the package discloses no consumer's identity", () => {
+describe("the package's generic disclosure contract", () => {
   const packagedDirs = [
     "bin",
     "plugin",
@@ -106,8 +71,7 @@ describe("the package discloses no consumer's identity", () => {
       }
     };
     for (const dir of packagedDirs) walk(path.join(root, dir));
-    // This file has to name what it forbids in order to look for it.
-    return out.filter((file) => file !== fileURLToPath(import.meta.url));
+    return out;
   }
 
   /** Text content, or null for anything that cannot carry a readable name. */
@@ -139,12 +103,133 @@ describe("the package discloses no consumer's identity", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("names no consumer repository in any shipped file", () => {
-    const offenders = packagedFiles().filter((file) => {
-      const text = textOf(file);
-      return text !== null && /\bcollider\b/i.test(text);
-    });
-    expect(offenders).toEqual([]);
+  it("keeps retired operational guidance out of every Figma JSON fixture", () => {
+    const fixtureFiles = packagedFiles().filter(
+      (file) =>
+        file.includes(
+          `${path.sep}src${path.sep}figma${path.sep}__fixtures__${path.sep}`,
+        ) && file.endsWith(".json"),
+    );
+    expect(fixtureFiles.length).toBeGreaterThan(20);
+    const retired = /code[ _-]?connect|pilot|CT-11B|figma:connect:/i;
+    expect(
+      fixtureFiles.filter((file) => retired.test(textOf(file) ?? "")),
+    ).toEqual([]);
+  });
+
+  it("checks test bodies and filenames independently with literal case-insensitive matching", () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "disclosure-contract-"));
+    const stagedTree = path.join(root, "staged");
+    const identifier = "synthetic.private[identifier]";
+    const fixtureDir = path.join(stagedTree, "src/figma/__fixtures__");
+    const identifierFile = path.join(root, "identifiers.txt");
+    const disclosure = path.resolve(here, "../../scripts/checks/disclosure.sh");
+    const run = (configured: boolean) =>
+      spawnSync(
+        "/bin/bash",
+        [
+          disclosure,
+          ...(configured ? ["--identifiers-file", identifierFile] : []),
+          stagedTree,
+          "synthetic staged tree",
+        ],
+        { encoding: "utf8" },
+      );
+    try {
+      fs.mkdirSync(fixtureDir, { recursive: true });
+      fs.writeFileSync(identifierFile, `${identifier}\n`);
+      const clean = run(true);
+      expect(clean.status).toBe(0);
+      expect(clean.stdout).toContain("configured private identifiers absent");
+      expect(run(false).stdout).toContain(
+        "no private identifier list configured",
+      );
+      const indirect = path.join(root, "indirect");
+      fs.symlinkSync(stagedTree, indirect);
+      expect(
+        spawnSync(
+          "/bin/bash",
+          [
+            disclosure,
+            "--identifiers-file",
+            identifierFile,
+            indirect,
+            "symlink root",
+          ],
+          { encoding: "utf8" },
+        ).status,
+      ).toBe(2);
+      fs.symlinkSync(identifierFile, path.join(stagedTree, "indirect-list"));
+      expect(run(true).status).toBe(2);
+      fs.unlinkSync(path.join(stagedTree, "indirect-list"));
+      const listLink = path.join(root, "list-link");
+      fs.symlinkSync(identifierFile, listLink);
+      expect(
+        spawnSync(
+          "/bin/bash",
+          [
+            disclosure,
+            "--identifiers-file",
+            listLink,
+            stagedTree,
+            "symlink list",
+          ],
+          { encoding: "utf8" },
+        ).status,
+      ).toBe(2);
+
+      for (const [name, body] of [
+        ["boundary.test.ts", identifier.toUpperCase()],
+        [`${identifier}.test.ts`, "no private name in this body"],
+      ]) {
+        const file = path.join(fixtureDir, name!);
+        fs.writeFileSync(file, body!);
+        const result = run(true);
+        expect(result.status).toBe(1);
+        expect(result.stderr).toContain("configured private identifier");
+        fs.unlinkSync(file);
+        expect(run(true).status).toBe(0);
+      }
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects empty and malformed local identifier lists", () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "disclosure-list-"));
+    const stagedTree = path.join(root, "staged");
+    const disclosure = path.resolve(here, "../../scripts/checks/disclosure.sh");
+    try {
+      fs.mkdirSync(stagedTree);
+      for (const { name, contents } of [
+        { name: "empty.txt", contents: "" },
+        { name: "nul.txt", contents: "foo\0bar\n" },
+        { name: "invalid-utf8.txt", contents: Buffer.from([0xff, 0x0a]) },
+        { name: "control.txt", contents: "foo\tbar\n" },
+        {
+          name: "not-newline-terminated.txt",
+          contents: "synthetic-private-identifier",
+        },
+        { name: "padded.txt", contents: " synthetic-private-identifier\n" },
+      ]) {
+        const list = path.join(root, name);
+        fs.writeFileSync(list, contents);
+        const result = spawnSync(
+          "bash",
+          [
+            disclosure,
+            "--identifiers-file",
+            list,
+            stagedTree,
+            "synthetic staged tree",
+          ],
+          { encoding: "utf8" },
+        );
+        expect(result.status).toBe(2);
+      }
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
   });
 });
 

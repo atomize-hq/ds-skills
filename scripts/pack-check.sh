@@ -68,7 +68,11 @@ done
 # every path it opened is inside its own install prefix.
 node "$root/scripts/checks/trace-reads.mjs" "$cli" "$work/consumer-alpha" "$work/prefix/$release"
 
-bash "$root/scripts/checks/disclosure.sh" "$installed" "installed release"
+if [ -n "${DS_SKILLS_PRIVATE_IDENTIFIERS_FILE:-}" ]; then
+  bash "$root/scripts/checks/disclosure.sh" --identifiers-file "$DS_SKILLS_PRIVATE_IDENTIFIERS_FILE" "$installed" "installed release"
+else
+  bash "$root/scripts/checks/disclosure.sh" "$installed" "installed release"
+fi
 bash "$root/scripts/checks/npm-tarball.sh" "$root" "$work"
 
 echo "pack check ok — the release installs, verifies, and runs as two unrelated consumers"

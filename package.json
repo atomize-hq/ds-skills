@@ -6,14 +6,14 @@
   },
   "homepage": "https://github.com/atomize-hq/ds-skills#readme",
   "bugs": "https://github.com/atomize-hq/ds-skills/issues",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "engines": {
     "node": ">=22"
   },
   "bin": {
     "ds-skills": "bin/ds-skills.mjs"
   },
-  "description": "Publish a DTCG token artifact into Figma variables, and check a Figma file for drift against it. Repo is canonical; Figma is downstream.",
+  "description": "Portable design-system skills, evidence-grounded library curation, and token/Figma workflows for independently installed project consumers.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",

@@ -20,6 +20,8 @@ echo '{"name":"consumer","private":true,"type":"module"}' > package.json
 pnpm add "$tarball" --silent >/dev/null
 
 installed="$consumer/node_modules/@atomize-hq/ds-skills"
+# pnpm exposes dependencies through a symlink; scan the actual installed tree.
+installed="$(cd "$installed" && pwd -P)"
 # No bundler anywhere in the dependency tree, and none needed.
 if [ -e "$consumer/node_modules/esbuild" ] || [ -e "$installed/node_modules/esbuild" ]; then
   echo "the package still drags a bundler in behind it" >&2; exit 1
@@ -51,5 +53,9 @@ for file in schemas/sync-ledger.schema.json profiles/example.json \
   test -f "$installed/$file" || { echo "$file did not survive packing" >&2; exit 1; }
 done
 
-bash "$root/scripts/checks/disclosure.sh" "$installed" "npm tarball"
+if [ -n "${DS_SKILLS_PRIVATE_IDENTIFIERS_FILE:-}" ]; then
+  bash "$root/scripts/checks/disclosure.sh" --identifiers-file "$DS_SKILLS_PRIVATE_IDENTIFIERS_FILE" "$installed" "npm tarball"
+else
+  bash "$root/scripts/checks/disclosure.sh" "$installed" "npm tarball"
+fi
 echo "  npm tarball: files complete, one builder, no bundler pulled in"
