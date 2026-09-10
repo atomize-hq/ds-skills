@@ -61,7 +61,9 @@ export function specimen(nodes, row, section, p, model, mode, counts) {
     );
     if (kind === "color") fill(node, row.variable);
     else if (["dimension", "duration"].includes(kind)) {
-      if (sample.rendered > 0) numeric(node, "width", sample.rendered * scale);
+      // rectangle() already resized it; native width has no property setter.
+      if (sample.rendered > 0 && sample.binding === "direct" && scale === 1)
+        bind(node, "width", row.variable);
     } else if (kind === "radius")
       for (const side of [
         "topLeftRadius",

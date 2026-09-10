@@ -51,12 +51,18 @@ export function renderFixture(options = {}) {
       this.removed = false;
       this.x = 0;
       this.y = 0;
-      this.width = 100;
-      this.height = 100;
+      this._width = 100;
+      this._height = 100;
       this.data = {};
       this.bindings = {};
       this.explicitVariableModes = {};
       nodes.set(this.id, this);
+    }
+    get width() {
+      return this._width;
+    }
+    get height() {
+      return this._height;
     }
     appendChild(child) {
       hooks.append?.(this, child);
@@ -79,8 +85,8 @@ export function renderFixture(options = {}) {
     resize(w, h) {
       if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0)
         throw new Error("Invalid geometry");
-      this.width = w;
-      this.height = h;
+      this._width = w;
+      this._height = h;
     }
     setBoundVariable(field, v) {
       if (!v) throw new Error("Missing variable");
