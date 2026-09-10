@@ -9,7 +9,9 @@ export function readCuration(value, root) {
   const paths = Object.fromEntries(
     ["definition", "candidate", "lockPath"].map((k) => [
       k,
-      resolveProjectPath(root, value[k], `curation.${k}`),
+      resolveProjectPath(root, value[k], `curation.${k}`, {
+        cooperativeLockDirectory: k === "lockPath",
+      }),
     ]),
   );
   for (const key of ["accepted", "review"]) {

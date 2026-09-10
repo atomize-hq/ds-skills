@@ -63,7 +63,14 @@ export function readBuild(value, root) {
       compatibility: readCompatibility(runtime.compatibility, root),
     },
     outputs,
-    lockPath: resolveProjectPath(root, value.lockPath, "tokens.build.lockPath"),
+    lockPath: resolveProjectPath(
+      root,
+      value.lockPath,
+      "tokens.build.lockPath",
+      {
+        cooperativeLockDirectory: true,
+      },
+    ),
   };
 }
 function readCompatibility(value, root) {

@@ -35,6 +35,7 @@ export function readChromatic(data, root) {
       root,
       data.lockPath,
       "storybook.chromatic.lockPath",
+      { cooperativeLockDirectory: true },
     ),
     restore: readRestore(data.restore),
     publish: readChromaticPublish(data.publish, root),

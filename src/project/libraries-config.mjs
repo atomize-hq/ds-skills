@@ -5,7 +5,9 @@ export function readLibraries(value, root, label = "libraries") {
   const paths = Object.fromEntries(
     ["definition", "candidate", "lockPath"].map((k) => [
       k,
-      resolveProjectPath(root, value[k], `${label}.${k}`),
+      resolveProjectPath(root, value[k], `${label}.${k}`, {
+        cooperativeLockDirectory: k === "lockPath",
+      }),
     ]),
   );
   let evidence = null;

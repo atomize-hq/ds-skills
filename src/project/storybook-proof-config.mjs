@@ -59,7 +59,9 @@ export function readStorybookProof(data, root) {
     ...Object.fromEntries(
       ["componentSpecs", "coverage", "lockPath"].map((key) => [
         key,
-        resolveProjectPath(root, data[key], `storybook.proof.${key}`),
+        resolveProjectPath(root, data[key], `storybook.proof.${key}`, {
+          cooperativeLockDirectory: key === "lockPath",
+        }),
       ]),
     ),
   };
