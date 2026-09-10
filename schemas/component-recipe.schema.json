@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.atomizehq.com/ds-skills/component-recipe.schema.json",
+  "title": "Component recipe source",
+  "description": "Structural version 1 contract for component recipe sources. Intrinsic relationships and token existence are validated by recipes validate.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "recipeVersion",
+    "componentId",
+    "variantAxes",
+    "defaults",
+    "slots",
+    "states",
+    "fallbacks"
+  ],
+  "properties": {
+    "recipeVersion": {
+      "type": "string",
+      "const": "1",
+      "description": "Versioned CT-3 source contract. V1 fixes this value to the string \"1\"."
+    },
+    "componentId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "description": "Stable component identifier. It must match the filename stem before .recipe.json."
+    },
+    "variantAxes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/variantAxis"
+      },
+      "description": "Declared variant axes for the component. Axis-name uniqueness is a contract rule validated by downstream tooling."
+    },
+    "defaults": {
+      "$ref": "#/$defs/defaults"
+    },
+    "slots": {
+      "$ref": "#/$defs/slotMap"
+    },
+    "states": {
+      "$ref": "#/$defs/stateMap"
+    },
+    "fallbacks": {
+      "$ref": "#/$defs/fallbacks"
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "tokenReference": {
+      "type": "string",
+      "pattern": "^\\{[a-z0-9]+(?:-[a-z0-9]+)*(\\.[a-z0-9]+(?:-[a-z0-9]+)*)+\\}$",
+      "description": "Brace-wrapped qualified token identifier. Namespaces are supplied by token sources, not a fixed library list."
+    },
+    "referenceTree": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/tokenReference"
+        },
+        {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "$ref": "#/$defs/identifier"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/referenceTree"
+          }
+        }
+      ]
+    },
+    "variantAxis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "values"],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/identifier"
+        },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        }
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["variants", "state"],
+      "properties": {
+        "variants": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "$ref": "#/$defs/identifier"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "state": {
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    },
+    "slotMap": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "$ref": "#/$defs/identifier"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/referenceTree"
+      }
+    },
+    "stateMap": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "$ref": "#/$defs/identifier"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/referenceTree"
+      }
+    },
+    "fallbacks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["missingVariantBehavior", "stateFallbacks"],
+      "properties": {
+        "missingVariantBehavior": {
+          "type": "string",
+          "enum": ["use-defaults"]
+        },
+        "stateFallbacks": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/identifier"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/identifier"
+          }
+        }
+      }
+    }
+  }
+}

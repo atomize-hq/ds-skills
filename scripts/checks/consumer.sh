@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # The decisive scenario (§7.3): a clean, data-only consumer outside both
 # checkouts — no product dependencies, no repository credentials, no ambient
-# builder — running the installed release against its own data. Every command,
-# valid and invalid inputs.
+# builder — running the installed release against its own data. Configured command
+# contracts use valid and invalid inputs; the enclosing pack gate also exercises
+# release acquisition and project setup/check.
 #
 #   consumer.sh <cli> <dir> <label>
 set -euo pipefail
@@ -64,6 +65,9 @@ test "$before" = "$(cat refs/token-rail.baseline.json)" ||
   { echo "$label: re-capturing an unchanged baseline rewrote it" >&2; exit 1; }
 
 # ---- figma verify, both ways ----
+# Explicit project root must work from outside that project; equal relative
+# strings are not sufficient when the caller and consumer are different roots.
+(cd / && "$cli" figma verify --root "$dir" --config config.json --expect refs/token-rail.baseline.json --artifact artifact.json >/dev/null)
 "$cli" figma verify --config config.json --expect refs/token-rail.baseline.json \
   --artifact artifact.json >/dev/null
 node -e '
@@ -155,6 +159,78 @@ fails 2 "--json where it is not supported" "$cli" figma verify --json \
 fails 1 "validate against a schema the instance does not satisfy" \
   "$cli" validate sync-ledger config.json --profile profile.json
 
+# ---- portable recipe source validation, independent of publication status ----
+recipes="$(node -p 'require("./recipe-test-input.json").recipes')"
+"$cli" recipes validate --recipes "$recipes" --tokens artifact.json --json > recipe-result.json
+node -e '
+  const r=require("./recipe-result.json"), expected=require("./recipe-test-input.json");
+  if(!r.ok || r.components.length!==1 || r.components[0].componentId!==expected.componentId)
+    throw new Error("installed recipe validation did not evaluate the configured source");
+'
+node -e '
+  const fs=require("node:fs"), input=require("./recipe-test-input.json");
+  const recipe=JSON.parse(fs.readFileSync(`${input.recipes}/${input.componentId}.recipe.json`, "utf8"));
+  recipe.slots[Object.keys(recipe.slots)[0]].color="{brand.missing}";
+  fs.mkdirSync("invalid-recipes");
+  fs.writeFileSync(`invalid-recipes/${input.componentId}.recipe.json`,JSON.stringify(recipe));
+'
+fails 1 "recipe with an unknown token" "$cli" recipes validate --recipes invalid-recipes --tokens artifact.json
+grep -q 'token-inventory' "$dir/.err" ||
+  { echo "$label: invalid recipe did not reach token existence validation" >&2; exit 1; }
+fails 2 "missing recipe source directory" "$cli" recipes validate --recipes absent --tokens artifact.json
+
+# ---- canonical token validation, not just a prebuilt artifact inventory ----
+(cd / && "$cli" tokens validate --root "$dir" --config project.json --json > "$dir/token-result.json")
+node -e '
+  const r=require("./token-result.json");
+  if(!r.ok || r.themes.length!==2 || r.themes.some(t=>t.tokenCount!==4 || t.recipeCount!==1))
+    throw new Error("installed token validation did not evaluate both configured themes");
+'
+source_file="$(node -p 'require("./project.json").tokens.sourceDir + "/brand.tokens.json"')"
+cp "$source_file" "$dir/source-backup.json"
+node -e '
+  const fs=require("node:fs"), file=process.argv[1];
+  const data=JSON.parse(fs.readFileSync(file,"utf8"));data.base.$value="{brand.missing}";
+  fs.writeFileSync(file,JSON.stringify(data));
+' "$source_file"
+fails 1 "canonical token reference is missing" "$cli" tokens validate --config project.json
+grep -q 'TOKEN_REFERENCE' "$dir/.err" ||
+  { echo "$label: canonical source failure did not reach reference validation" >&2; exit 1; }
+cp "$dir/source-backup.json" "$source_file"
+fails 2 "token project configuration is absent" "$cli" tokens validate --config absent.json
+
+# ---- complete installed compiler, no dependencies or ambient config ----
+(cd / && "$cli" tokens artifacts check --root "$dir" --config project.json --json > "$dir/artifact-result.json")
+node -e '
+ const r=require("./artifact-result.json");
+ if(!r.ok || r.artifacts.length!==4 || r.artifacts.some(a=>a.state!=="current")) throw new Error("installed compiler differs from authored artifact bytes");
+'
+css_file="$(node -p 'require("./project.json").tokens.build.outputs.runtimeCss')"
+cp "$css_file" "$dir/css-backup.txt"
+printf '\n/* manual edit */\n' >> "$css_file"
+fails 1 "runtime output drift" "$cli" tokens artifacts check --config project.json
+grep -q 'GENERATED_ARTIFACT_STALE' "$dir/.err" || { echo "$label: drift not detected" >&2; exit 1; }
+grep -q 'manual edit' "$css_file" || { echo "$label: check repaired output" >&2; exit 1; }
+(cd / && "$cli" tokens build --root "$dir" --config project.json --json > "$dir/build-result.json")
+cmp "$dir/css-backup.txt" "$css_file" || { echo "$label: installed build did not reproduce runtime bytes" >&2; exit 1; }
+node -e '
+ const r=require("./build-result.json");
+ if(!r.ok || r.artifacts.find(a=>a.id==="runtimeCss").status!=="written") throw new Error("build did not report regenerated runtime output");
+'
+"$cli" tokens build --config project.json --json > build-again.json
+node -e 'if(!require("./build-again.json").artifacts.every(a=>a.status==="unchanged")) throw new Error("repeat build rewrote unchanged output")'
+node -e '
+ const fs=require("node:fs"), data=require("./project.json");
+ data.tokens.build.outputs.figma="bad-write-project.json";fs.writeFileSync("bad-write-project.json",JSON.stringify(data));
+'
+cp bad-write-project.json bad-write-project-backup.json
+fails 2 "build output overlaps config input" "$cli" tokens build --config bad-write-project.json
+cmp bad-write-project.json bad-write-project-backup.json || { echo "$label: build changed protected config" >&2; exit 1; }
+fails 2 "artifact check cannot evaluate absent config" "$cli" tokens artifacts check --config missing.json
+
+bash "$(dirname "${BASH_SOURCE[0]}")/runtime-consumer.sh" "$cli" "$dir"
+bash "$(dirname "${BASH_SOURCE[0]}")/governance-consumer.sh" "$cli" "$dir"
+
 # ---- skills: discovery, and the release they came from ----
 "$cli" skills >/dev/null
 test -d "$("$cli" skills | sed -n 's/.*skills: //p' | head -n1)" ||
@@ -169,4 +245,4 @@ test "$(cut -d' ' -f1 <<<"$identity" | cut -d= -f2)" = \
 grep -q "cli=$(basename "$(dirname "$(dirname "$cli")")")" <<<"$identity" ||
   { echo "$label: the install reports a release other than the directory it is in: $identity" >&2; exit 1; }
 
-echo "  $label: every command exercised with valid and invalid inputs"
+echo "  $label: configured command contracts exercised with valid and invalid inputs"

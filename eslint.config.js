@@ -3,7 +3,7 @@ import tseslint from "typescript-eslint";
 
 /**
  * The pack's lint gate, required by SPEC.md §6 as part of taking ownership of
- * the code. Deliberately NOT Collider's config: the two repos have different
+ * the code. Deliberately independent of consumer configs: repositories have different
  * formatting and different rules, and unifying them would produce a large diff
  * that is entirely noise.
  *

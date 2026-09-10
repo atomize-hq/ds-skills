@@ -1,0 +1,4 @@
+interface:
+  display_name: "Stack Orchestrator"
+  short_description: "Route configured design-system work and evidence"
+  default_prompt: "Use $stack-orchestrator to classify the task and route it using this project's actual stack, library selections and evidence boundaries."

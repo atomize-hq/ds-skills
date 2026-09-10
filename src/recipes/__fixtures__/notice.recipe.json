@@ -1,0 +1,15 @@
+{
+  "recipeVersion": "1",
+  "componentId": "notice",
+  "variantAxes": [{ "name": "intent", "values": ["normal", "urgent"] }],
+  "defaults": { "variants": { "intent": "normal" }, "state": "idle" },
+  "slots": { "body": { "text": "{brand.ink}" } },
+  "states": {
+    "idle": { "body": { "text": "{brand.ink}" } },
+    "muted": { "body": { "text": "{brand.muted}" } }
+  },
+  "fallbacks": {
+    "missingVariantBehavior": "use-defaults",
+    "stateFallbacks": { "muted": "idle" }
+  }
+}

@@ -4,23 +4,41 @@
   "title": "Storybook Component Tier Policy",
   "description": "The repo profile that gives 'tier' its meaning. A component spec declares an open-string tier; this file declares which tiers exist, in what order of rigour, and the minimum story kinds each one owes. Porting the pack to a new repo means rewriting this file, not the schemas that reference it.",
   "type": "object",
-  "required": ["policyVersion", "tierOrder", "tiers"],
+  "required": ["policyVersion", "tierOrder", "tiers", "consumerIds"],
   "additionalProperties": false,
   "properties": {
-    "policyVersion": { "const": "1" },
+    "policyVersion": {
+      "const": "2"
+    },
     "tierOrder": {
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
-      "items": { "type": "string", "minLength": 1 },
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
       "x-repo-profile": "tier-names",
-      "description": "REPO PROFILE. Tier names in ascending order of required rigour; a consumer supplies its own ladder in its profile. Every key in `tiers` must appear here, and vice versa — a cross-field rule enforced by the validator."
+      "description": "REPO PROFILE. Tier names in ascending order of required rigour; a consumer supplies its own ladder in its profile. Every key in `tiers` must appear here, and vice versa \u2014 a cross-field rule enforced by the validator."
     },
     "tiers": {
       "type": "object",
       "minProperties": 1,
-      "additionalProperties": { "$ref": "#/$defs/tierEntry" },
+      "additionalProperties": {
+        "$ref": "#/$defs/tierEntry"
+      },
       "description": "Keyed by tier name. Keys must match tierOrder exactly."
+    },
+    "consumerIds": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "\\S"
+      },
+      "description": "Declared downstream consumer identities. Each tier consumerScope must select from this list; enforced by storybook policy validate."
     }
   },
   "$defs": {
@@ -54,22 +72,29 @@
         "minimumRequiredKinds": {
           "type": "array",
           "minItems": 1,
-          "items": { "$ref": "#/$defs/requiredKind" },
+          "items": {
+            "$ref": "#/$defs/requiredKind"
+          },
           "description": "Every component at this tier must prove these. Each carries a purpose so the requirement is arguable rather than arbitrary."
         },
         "defaultOptionalKinds": {
           "type": "array",
           "uniqueItems": true,
-          "items": { "$ref": "#/$defs/storyKind" },
+          "items": {
+            "$ref": "#/$defs/storyKind"
+          },
           "description": "Kinds a component at this tier may add. Must not overlap minimumRequiredKinds."
         },
         "consumerScope": {
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": { "type": "string", "minLength": 1 },
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
           "x-repo-profile": "consumer-ids",
-          "description": "REPO PROFILE. Identifiers for the downstream consumers that read this tier; a consumer supplies the pattern in its profile."
+          "description": "Consumer identities selected from this policy consumerIds; cross-field membership is enforced by storybook policy validate."
         }
       }
     },
@@ -78,7 +103,9 @@
       "required": ["kind", "purpose"],
       "additionalProperties": false,
       "properties": {
-        "kind": { "$ref": "#/$defs/storyKind" },
+        "kind": {
+          "$ref": "#/$defs/storyKind"
+        },
         "purpose": {
           "type": "string",
           "minLength": 1,

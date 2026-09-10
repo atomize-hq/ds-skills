@@ -23,14 +23,15 @@ if grep -rqE 'figma://file/[A-Za-z0-9]{18,}' "$tree"; then
   echo "$label: embeds a real Figma file key" >&2; exit 1
 fi
 
-# The two ai-elements skills stay with the consumer: a token-rail CLI has no
-# business shipping a third-party component library's docs, and a moved skill
-# still pointing at them drags the coupling along behind it.
-if grep -rqiE 'ai-elements|ai_elements|\bplate\b' "$tree/skills"; then
-  echo "$label: installed skills reference ai-elements or plate" >&2; exit 1
+# Library names may occur in reviewed examples; they are not forbidden product
+# capabilities. Operational retired-system guidance, local runtime paths and
+# consumer command assumptions remain forbidden in reusable instructions/assets.
+if grep -rqiE 'code[ _-]?connect|pilot|CT-11B|figma:connect:' "$tree/skills" "$tree/templates" "$tree/schemas"; then
+  echo "$label: reusable instructions retain retired-system guidance" >&2; exit 1
 fi
-test ! -e "$tree/skills/ai-elements"
-test ! -e "$tree/skills/ai-elements-plate-builder"
+if grep -rqE '/Users/|/home/|src/components/|src-tauri/|design-tokens/src/|pnpm validate:|just check' "$tree/skills"; then
+  echo "$label: reusable skills embed consumer path/command assumptions" >&2; exit 1
+fi
 
 # Skills sit one level deeper here than under a consumer's .agents/skills/, so a
 # relative asset path that was right there is silently wrong in the package.

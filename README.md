@@ -60,6 +60,24 @@ divergences from the reference installer it is modelled on: a missing `SHA256SUM
 rather than warning and skipping, and a tag that will not resolve **fails** rather than falling
 back to a branch.
 
+### Candidate release management
+
+The candidate also provides a [generated project launcher and ownership-safe setup](src/project-host/README.md).
+A [product-owned CI setup action](.github/actions/setup-ds-skills/README.md) uses the same provisioning API.
+These are not yet available in the public v0.4.0 release.
+
+The separation branch adds [product-owned v2 release verification and acquisition](src/install/README.md),
+including sealed installed-file digests. These commands require a new v2 reviewed pin;
+they are not features of the published v0.4.0 example above. Project launcher/discovery
+cutover and final release publication remain pending.
+
+### Candidate Storybook policy checks
+
+The separation candidate includes [configured Storybook policy validation](src/storybook/README.md):
+inventory consistency, policy-defined tiers/consumers, and version-policy structure.
+This is a structural check, not executed component readiness or publication proof.
+It requires tier policy version 2 and is not in the published v0.4.0 release.
+
 ## Configure
 
 One file, `ds-skills.config.json`:
@@ -168,9 +186,68 @@ configured consumers. It needs `tokei` (the LOC guard) and `pwsh` (the Windows i
 tests); both fail loudly rather than being skipped.
 
 ```bash
-pnpm release:stage --release v0.4.0   # stage candidate assets into ./release
-pnpm rehearse <consumer-checkout> <cli>   # dry-run a consumer cutover in a disposable clone
+pnpm release:stage --release <new-version>   # stage candidate assets into ./release
 ```
 
-`rehearse` is deliberately not part of `pnpm check`: a portable package's own gate must not
-require a particular consumer to exist.
+Use an isolated real consumer and its explicit project configuration to verify a
+cutover through the pinned launcher. The obsolete fixed-layout rehearsal command
+is removed: it assumed one consumer's paths and accepted an arbitrary CLI path.
+The package gate must not require a particular consumer checkout. Live publication
+and actual consumer integration remain separate release requirements; synthetic
+package fixtures are not substitutes.
+
+### Consumer-owned source rules
+
+`ds-skills sources policy check` and `ds-skills sources contract check` run
+configured text invariants and static module/slot checks from the installed
+product. Library identities, source roots, and local obligations remain consumer
+data; they are not fixed supported-package names. See
+[configuration, semantics and limits](src/source-checks/README.md). These checks do
+not replace application typechecks or establish component publication/readiness.
+
+### Foundations specimens
+
+`ds-skills foundations build` and `ds-skills foundations check` assemble and verify
+a self-contained Figma specimen script from project token/model/presentation data.
+The commands do **not** execute it or publish tokens. See the
+[configuration, guarded rendering, and verification boundaries](src/foundations/README.md).
+
+### Library source evidence
+
+Candidate `ds-skills libraries evidence capture/check/diff` commands collect and
+compare explicit multiple-library source selections, with exact package/Git/content
+identity and separately reviewed evidence pins. Source declarations are not yet
+semantic skill curation. See [configuration, review lifecycle and limits](src/libraries/README.md).
+
+### Registry snapshots
+
+Candidate `ds-skills registries capture/check/diff` commands acquire explicit
+multi-registry sources, preserve full payload/file identity, and keep pin checks
+offline. Reviewed snapshots feed the library-evidence pipeline without another
+network request. See [supported registry format, limits and review flow](src/registries/README.md).
+
+### Project-specific skill curation
+
+The reusable `curate-component-libraries` skill guides agent-authored, source-grounded
+guidance for configured libraries. Candidate `curation validate/build/check/diff`
+commands validate provenance and build reviewable namespaced skill bundles.
+`curation install` materializes exact reviewed bundles into both project discovery
+surfaces; `curation installed check` checks owned output and release/input skew.
+These operations do not certify semantic correctness or execute examples. See
+[the curation contract and current boundaries](src/curation/README.md).
+
+### Portable skill workflows
+
+The candidate pack owns nine reusable workflows: routing, foundations, Storybook,
+component round trips, layout assembly, library component implementation, interactive
+workspace composition, library curation and quality reconciliation. Start with
+[the stack router](skills/stack-orchestrator/SKILL.md) and follow only the workflow
+needed by the task. Frameworks, native boundaries, libraries, paths and evidence
+profiles come from the consumer, not fixed stack assumptions.
+
+Library-specific API guidance is reviewed, generated project output, not a static
+supported-package catalog. AI Elements can be an explicitly configured source just
+like a different component library; the shared pack does not embed one consumer's
+API imports, registry installation commands or editor choice. Installed core and
+custom output have separate integrity gates. These candidate workflows still require
+the final published release and consumer cutover; public v0.4.0 is unchanged.

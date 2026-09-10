@@ -11,5 +11,5 @@
     "checkJs": false
   },
   "include": ["src/**/*.ts", "src/**/*.mjs"],
-  "exclude": ["src/**/*.test.ts"]
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.mjs"]
 }

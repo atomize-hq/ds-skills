@@ -1,86 +1,53 @@
-# Foundation Baseline Template
+# Project foundation worksheet
 
-## 1. Architecture
+Keep decisions and evidence at consumer-owned paths. Fill only capabilities selected
+for the task; an unconfigured capability is not a missing required check. A selected
+capability with absent inputs must remain an explicit gap.
 
-- Next.js App Router structure:
-- Tauri boundary assumptions:
-- AI Elements ownership:
-- Plate ownership:
-- Token source-of-truth split:
+## Runtime and ownership
 
-## 2. Storybook Version Policy
+- Actual framework, shipped-runtime constraints and toolchain:
+- Host/transport boundary and intent contracts:
+- Selected libraries, versions/revisions and installed curated skill names:
+- Dependency versus copied-source ownership, deviations and attribution:
+- Canonical token source and generated artifact/runtime targets:
 
-- Framework:
-- Exact Storybook version line:
-- Required addons:
-- Required import paths:
-- Disallowed legacy packages:
-- Upgrade command/process:
-- Validation commands:
+## Storybook, when selected
 
-## 3. Storybook Baseline Decisions
+- Version/framework/import policy and configured artifact paths:
+- Tier/consumer policy, specs, inventory and applicable story kinds:
+- Providers/router/host/network mocks:
+- Controls, event visibility, docs and design references:
+- Actual interaction/a11y/build commands and results:
+- Visual review process, scope/revision and baseline state:
 
-- Story file naming:
-- Global decorators/providers:
-- Router/app-directory strategy:
-- Native mock strategy:
-- Async/network mock strategy:
-- Docs/autodocs policy:
-- Code panel/source snippet policy:
-- Controls sorting/visibility policy:
-- Tags policy:
-- Chromatic/visual review policy:
-- Figma design-link policy:
+## Primitive strategy
 
-## 4. Story Taxonomy Rules
+| Target | Reuse, wrap or new | Actual API/ownership | Applicable stories/tests | Evidence gaps |
+| ------ | ------------------ | -------------------- | ------------------------ | ------------- |
+|        |                    |                      |                          |               |
 
-- Default stories:
-- Variant Matrix stories:
-- State Matrix stories:
-- Actions stories:
-- Controlled stories:
-- Workflow stories:
-- Motion stories:
-- Async stories:
-- Screen/layout story rules:
+Recipes describe actual variants/slots/states and valid token references; recipe
+validity is not enrollment, behavioral readiness or publication approval.
 
-## 5. Primitive Wave
+## Tokens and Figma, when selected
 
-| Primitive | Status (`[REUSE]` / `[WRAP]` / `[NEW]`) | Story expectations | Design mapping notes |
-| --------- | --------------------------------------- | ------------------ | -------------------- |
-| Button    |                                         |                    |                      |
-| Input     |                                         |                    |                      |
-| Dialog    |                                         |                    |                      |
+- Token themes/modes, semantic naming, alias and generated output policy:
+- Explicit target ownership, collection/mode/variable IDs and mapping:
+- Component spec location and actual code/Figma node references:
+- Plugin generation/build, token serving and publication procedure:
+- Drift verification and artifact-bound proof/ledger paths:
+- Actual live smoke evidence and unresolved access/verification gaps:
 
-## 6. Figma Variables Plan
+The publication ledger describes the token artifact's publication, not per-component
+eligibility or review notes. Preserve IDs and bindings; do not recreate real targets
+to make a smoke check pass.
 
-- Collections:
-- Modes:
-- Alias strategy:
-- Semantic token naming:
-- Code token parity notes:
+## Evidence and promotion
 
-## 7. Design↔Code Link
-
-The link lives in `storybook/component-specs/<component-id>.json` under `downstreamHooks`.
-
-- Spec directory:
-- `figmaComponentRef` format (figma-use `<fileKey>#<a>:<b>` / web URL / both — see BL-1):
-- `codeEntrypoint` convention:
-- Who updates the link when a component is re-seeded:
-
-> **Code Connect is retired.** Do not bootstrap it, and do not make `figma:connect:validate` a
-> baseline gate. The CT-11B rail reports `not-applicable`; a component with no mapping is not drift.
-
-## 8. Native Boundary
-
-- Typed bridge strategy:
-- Command/event naming:
-- Permission/capability naming:
-- Storybook mock rules:
-
-## 9. Sync Policy
-
-- Drift categories:
-- Required links (Storybook/Figma/Chromatic):
-- Promotion criteria:
+- Requested claim and applicable profile/consumer policy:
+- Static source coverage:
+- Actual executed tests/build:
+- Current visual review:
+- Publication record versus actual live observation:
+- Blocking/advisory gaps and smallest follow-up:

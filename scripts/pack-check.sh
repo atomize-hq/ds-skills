@@ -3,7 +3,7 @@
 #
 # It tests the RELEASE PRODUCT, not a package tarball: the staged assets, the
 # production bootstrap, the trust chain, §10.6's lifecycle, and two differently
-# configured data-only consumers running every command from the installed
+# configured data-only consumers running their command contracts from the installed
 # prefix. A .tgz in a temp directory is not the artifact anyone installs, so the
 # npm path is kept only for the things it alone covers.
 #
@@ -33,6 +33,9 @@ bash "$root/scripts/checks/release-matrix.sh" "$root" "$work" "$release"
 
 cli="$work/prefix/$release/bin/ds-skills"
 installed="$work/prefix/$release/lib"
+bash "$root/scripts/checks/release-resolution.sh" "$cli" "$work" "$release"
+bash "$root/scripts/checks/project-host.sh" "$cli" "$work" "$release" "$root"
+node "$root/scripts/checks/project-action.mjs" "$root" "$work" "$release"
 test -x "$cli" || { echo "the release did not install an executable" >&2; exit 1; }
 
 # The environment the decisive scenario requires, asserted rather than assumed.
@@ -46,7 +49,19 @@ test -z "$(find "$work/prefix" -name esbuild -maxdepth 6 2>/dev/null)" ||
 # publish modes. Copying one layout under another name proves nothing (§7.3).
 for flavour in alpha beta; do
   node "$root/scripts/checks/make-consumer.mjs" "$work/consumer-$flavour" "$flavour" >/dev/null
+  cp "$work/release/ds-skills.release.json" "$work/consumer-$flavour/ds-skills.release.json"
+  "$cli" project setup --root "$work/consumer-$flavour" --prefix "$work/prefix" >/dev/null
+  DS_SKILLS_PREFIX="$work/prefix" node "$work/consumer-$flavour/.ds-skills/project.mjs" --check >/dev/null
+  node "$root/scripts/checks/storybook-policy.mjs" "$work/consumer-$flavour" "$work/prefix" "$flavour"
+  node "$root/scripts/checks/chromatic-status.mjs" "$work/consumer-$flavour" "$work/prefix" "$flavour"
+  node "$root/scripts/checks/components.mjs" "$work/consumer-$flavour" "$work/prefix" "$flavour"
+  node "$root/scripts/checks/source-checks.mjs" "$work/consumer-$flavour" "$work/prefix" "$flavour"
+  node "$root/scripts/checks/foundations.mjs" "$work/consumer-$flavour" "$work/prefix" "$flavour"
+  node "$root/scripts/checks/libraries.mjs" "$work/consumer-$flavour" "$work/prefix" "$flavour"
+  node "$root/scripts/checks/registries.mjs" "$work/consumer-$flavour" "$work/prefix" "$flavour"
+  node "$root/scripts/checks/curation.mjs" "$work/consumer-$flavour" "$work/prefix" "$flavour"
   bash "$root/scripts/checks/consumer.sh" "$cli" "$work/consumer-$flavour" "consumer $flavour"
+  DS_SKILLS_PREFIX="$work/prefix" node "$work/consumer-$flavour/.ds-skills/project.mjs" --check >/dev/null
 done
 
 # The CLI resolved nothing from the development checkout or a consumer's tree:

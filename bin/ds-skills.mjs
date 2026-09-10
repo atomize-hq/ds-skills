@@ -11,6 +11,8 @@ const manifest = JSON.parse(
   readFileSync(new URL("../package.json", import.meta.url), "utf8"),
 );
 
-process.exit(
-  await runCli({ argv: process.argv.slice(2), version: manifest.version }),
-);
+// Let pending stdout/stderr writes drain before Node exits, including piped JSON.
+process.exitCode = await runCli({
+  argv: process.argv.slice(2),
+  version: manifest.version,
+});

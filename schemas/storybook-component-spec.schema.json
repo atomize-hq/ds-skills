@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ds-skills.local/schemas/storybook-component-spec.schema.json",
   "title": "Storybook Component Spec",
-  "description": "One file per component: the design<->code contract and the story kinds the component owes. Portable, with two declared repo-profile extension points — see x-repo-profile on tier and generatedArtifactRefs.",
+  "description": "One file per component: the design<->code contract and the story kinds the component owes. Portable, with two declared repo-profile extension points \u2014 see x-repo-profile on tier and generatedArtifactRefs.",
   "type": "object",
   "required": [
     "specVersion",
@@ -22,7 +22,7 @@
     "componentId": {
       "type": "string",
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
-      "description": "kebab-case. Must equal the spec filename stem — a filesystem rule JSON Schema cannot express, enforced by the validator."
+      "description": "kebab-case. Must equal the spec filename stem \u2014 a filesystem rule JSON Schema cannot express, enforced by the validator."
     },
     "tier": {
       "type": "string",
@@ -34,13 +34,17 @@
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
-      "items": { "$ref": "#/$defs/storyKind" },
+      "items": {
+        "$ref": "#/$defs/storyKind"
+      },
       "description": "Kinds this component must prove. Must be a superset of the tier policy's minimumRequiredKinds for this tier."
     },
     "ownedStoryRefs": {
       "type": "array",
       "minItems": 1,
-      "items": { "$ref": "#/$defs/ownedStoryRef" },
+      "items": {
+        "$ref": "#/$defs/ownedStoryRef"
+      },
       "description": "Stories this spec owns. storyId must be unique across the array."
     },
     "generatedArtifactRefs": {
@@ -76,40 +80,55 @@
       "description": "Repo-relative path. Not absolute, not ./ or ../ prefixed, no URI scheme."
     },
     "nullableRepoPath": {
-      "oneOf": [{ "$ref": "#/$defs/repoPath" }, { "type": "null" }]
+      "oneOf": [
+        {
+          "$ref": "#/$defs/repoPath"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "nullableString": {
-      "oneOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "ownedStoryRef": {
       "type": "object",
       "required": ["storyId", "kinds"],
       "additionalProperties": false,
       "properties": {
-        "storyId": { "type": "string", "minLength": 1 },
+        "storyId": {
+          "type": "string",
+          "minLength": 1
+        },
         "kinds": {
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": { "$ref": "#/$defs/storyKind" }
+          "items": {
+            "$ref": "#/$defs/storyKind"
+          }
         }
       }
     },
     "generatedArtifactRefs": {
       "type": "object",
-      "x-repo-profile": "generated-artifacts",
-      "description": "REPO PROFILE. The concept is portable — 'generated proof surfaces this spec points at' — but the key names are one repo's set. A consumer redefines the key set in its profile and keeps the nullableRepoPath value rule.",
-      "required": ["tokenDocs", "recipeDocs", "runtimeParity"],
-      "additionalProperties": false,
-      "properties": {
-        "tokenDocs": { "$ref": "#/$defs/nullableRepoPath" },
-        "recipeDocs": { "$ref": "#/$defs/nullableRepoPath" },
-        "runtimeParity": { "$ref": "#/$defs/nullableRepoPath" }
-      }
+      "additionalProperties": {
+        "$ref": "#/$defs/nullableRepoPath"
+      },
+      "description": "Named generated proof surfaces. The project proof configuration supplies the required key set; values remain nullable relative paths."
     },
     "downstreamHooks": {
       "type": "object",
-      "description": "The design<->code link. codeEntrypoint + figmaComponentRef are the durable mapping pair; there is no Code Connect layer.",
+      "description": "Durable code and design references. These links alone do not prove implementation or publication.",
       "required": [
         "codeEntrypoint",
         "figmaComponentRef",
@@ -119,13 +138,24 @@
       ],
       "additionalProperties": false,
       "properties": {
-        "codeEntrypoint": { "$ref": "#/$defs/nullableString" },
-        "figmaComponentRef": { "$ref": "#/$defs/nullableString" },
-        "supportedVariantsSource": { "$ref": "#/$defs/nullableString" },
-        "slotNamesSource": { "$ref": "#/$defs/nullableString" },
+        "codeEntrypoint": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "figmaComponentRef": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "supportedVariantsSource": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "slotNamesSource": {
+          "$ref": "#/$defs/nullableString"
+        },
         "exampleStoryIds": {
           "type": "array",
-          "items": { "type": "string", "minLength": 1 }
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     }

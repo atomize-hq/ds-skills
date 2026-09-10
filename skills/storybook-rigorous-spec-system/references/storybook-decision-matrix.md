@@ -1,27 +1,22 @@
-# Storybook decision matrix for this stack
+# Storybook decisions for the configured project
 
-| Need                                                  | Recommended choice                                                                    |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Best overall path for Next.js Storybook in this stack | `@storybook/nextjs-vite`                                                              |
-| Modern Storybook test widget / Vitest integration     | `@storybook/addon-vitest`                                                             |
-| Replayable multi-step UI flows                        | `play` functions + Interactions/Test panel                                            |
-| CI visual regression                                  | Chromatic                                                                             |
-| CI interaction validation from stories                | Chromatic interaction tests                                                           |
-| Figma ↔ story linking                                 | `@storybook/addon-designs`, or Storybook Connect if published                         |
-| Keep strict Webpack/Babel compatibility               | `@storybook/nextjs` (Webpack)                                                         |
-| Webpack-based fallback                                | use `play` functions + Interactions panel + Chromatic, skip `@storybook/addon-vitest` |
+This is a worksheet, not a list of recommended package versions. Inspect the actual
+manifest, lockfile, framework/bundler configuration and supported test adapters. For
+an upgrade, verify current official compatibility documentation before changing the
+project's explicit version/import policy.
 
-## Where this repo actually sits
+| Decision              | Evidence to record                                                                                                              |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Framework and bundler | Installed rendering framework, compatible Storybook adapter, build constraints and deliberate migration limits                  |
+| Version/import policy | Exact declared package line, supported addon versions, allowed imports and obsolete packages being removed                      |
+| Interaction runner    | The configured runner actually executing stories, supported adapters and real command/CI output                                 |
+| Mocks                 | Router/providers, network and host boundaries; deterministic success, failure, cancellation and permission states               |
+| Accessibility         | Automated checks actually run plus keyboard/focus and applicable assistive-technology proof; never infer compliance from source |
+| Visual review         | Selected provider or review process, baseline existence, current scope/revision and unresolved outcomes                         |
+| Design references     | Actual target nodes recorded in component specs and story metadata, with explicit target ownership                              |
+| Publication           | Separate token artifact/proof/ledger workflow if configured; no implied per-component approval                                  |
 
-The rows above are recommendations. A repo adopting them should record its own position against
-each one, because the gap between "recommended" and "in place" is the thing worth knowing:
-
-- **Framework** — which of the two paths is installed, and whether the test-runner addon is wired.
-- **Figma ↔ story linking** — which addon, and where the durable link is stored. If Code Connect
-  is not in use, say so plainly rather than leaving a missing mapping to read as drift.
-- **Visual regression** — whether a baseline actually exists. A working publish rail with no
-  approved baseline is not a gate you can lean on, and a row recommending one describes where the
-  stack should end up rather than where it is.
-
-Record it where the repo's own status lives, not in this skill: a skill that carries one repo's
-status stops being portable the moment a second repo installs it.
+Keep project decisions and status in consumer data, not in this shared skill.
+A declared provider, configured addon or uploaded build does not establish that the
+expected tests ran or a baseline was approved. Report unavailable evidence rather
+than substituting a generic green status.

@@ -46,7 +46,8 @@ for dir in skills schemas templates profiles dist/plugin-bundle; do
 done
 for file in schemas/sync-ledger.schema.json profiles/example.json \
             src/validate/artifact.mjs release.json skills/RELEASE.json \
-            dist/plugin-bundle/code.js; do
+            dist/plugin-bundle/code.js dist/tokens/compiler.mjs \
+            dist/tokens/THIRD-PARTY-NOTICES.txt dist/tokens/compiler.mjs.LEGAL.txt; do
   test -f "$installed/$file" || { echo "$file did not survive packing" >&2; exit 1; }
 done
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Stage 2 Component Loop"
+  short_description: "Reconcile one component through design and code"
+  default_prompt: "Use $stage-2-component-roundtrip-loop to run the bounded story, design, code and verification loop for the selected reusable component."

@@ -70,7 +70,7 @@
         "storyId": {
           "type": "string",
           "minLength": 1,
-          "description": "Storybook story ID, e.g. \"ai-elements-message--default\"."
+          "description": "Storybook story ID, e.g. \"sample-message--default\"."
         }
       }
     }

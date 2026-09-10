@@ -4,5 +4,5 @@ plugin/code.js.map
 plugin/manifest.json
 release.json
 # Staged release candidates.
-release/
+/release/
 skills/RELEASE.json
