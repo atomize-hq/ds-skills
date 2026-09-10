@@ -6,7 +6,9 @@ export function readFoundations(value, root) {
   return Object.fromEntries(
     keys.map((k) => [
       k,
-      resolveProjectPath(root, value[k], `foundations.${k}`),
+      resolveProjectPath(root, value[k], `foundations.${k}`, {
+        cooperativeLockDirectory: k === "lockPath",
+      }),
     ]),
   );
 }

@@ -121,15 +121,16 @@ function readTokens(tokens, root) {
 }
 
 /** Project-relative paths cannot escape their declared root, including symlinks. */
-export function resolveProjectPath(root, value, label) {
+export function resolveProjectPath(root, value, label, options = {}) {
   if (typeof value !== "string" || !value.length || path.isAbsolute(value))
     fail(`${label} must be a non-empty project-relative path`);
   const target = path.resolve(root, value);
   if (!within(root, target)) fail(`${label} escapes the project root`);
   let ancestor = target;
+  let info;
   while (true) {
     try {
-      fs.lstatSync(ancestor);
+      info = fs.lstatSync(ancestor);
       break;
     } catch (error) {
       if (error.code !== "ENOENT")
@@ -142,12 +143,38 @@ export function resolveProjectPath(root, value, label) {
   let real;
   try {
     real = fs.realpathSync(ancestor);
-  } catch {
-    fail(`${label} has an unresolved filesystem link`);
+  } catch (error) {
+    // Only a configured cooperative lock directory can disappear after lstat.
+    // Do not weaken ordinary paths, symlinks, ancestors, or other errors.
+    if (
+      !options.cooperativeLockDirectory ||
+      ancestor !== target ||
+      !info.isDirectory() ||
+      error.code !== "ENOENT" ||
+      !isAbsent(target)
+    )
+      fail(`${label} has an unresolved filesystem link`);
+    const parent = path.dirname(target);
+    try {
+      if (!fs.statSync(parent).isDirectory())
+        throw new Error("Not a directory", { cause: error });
+      real = fs.realpathSync(parent);
+    } catch {
+      fail(`${label} has an unresolved filesystem link`);
+    }
   }
   if (!within(fs.realpathSync(root), real))
     fail(`${label} resolves outside the project root`);
   return target;
+}
+
+function isAbsent(target) {
+  try {
+    fs.lstatSync(target);
+    return false;
+  } catch (error) {
+    return error.code === "ENOENT";
+  }
 }
 
 function within(root, target) {

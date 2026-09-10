@@ -62,7 +62,9 @@ export function readComponents(value, root) {
   );
   return {
     report: resolveProjectPath(root, value.report, "components.report"),
-    lockPath: resolveProjectPath(root, value.lockPath, "components.lockPath"),
+    lockPath: resolveProjectPath(root, value.lockPath, "components.lockPath", {
+      cooperativeLockDirectory: true,
+    }),
     maxAgeMinutes: value.maxAgeMinutes,
     profiles,
   };

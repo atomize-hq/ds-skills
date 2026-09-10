@@ -17,7 +17,7 @@ value someone changed inside Figma surfaces as a reviewable finding, not a silen
 
 ## Install
 
-This checkout describes version 0.5.1. Use the following URL after that immutable
+This checkout describes version 0.5.2. Use the following URL after that immutable
 release is published; a missing release is an error, not permission to fall back.
 
 Provisioning and execution are separate operations. Provisioning installs one exact reviewed
@@ -25,7 +25,7 @@ release and may reach the network; execution runs that binary and resolves nothi
 no `latest`, no PATH lookup.
 
 ```bash
-curl -fsSL https://github.com/atomize-hq/ds-skills/releases/download/v0.5.1/install.sh -o install.sh
+curl -fsSL https://github.com/atomize-hq/ds-skills/releases/download/v0.5.2/install.sh -o install.sh
 # CI: verify install.sh against your committed ds-skills.release.json, then run it. Never pipe.
 bash install.sh
 ```
@@ -63,7 +63,7 @@ divergences from the reference installer it is modelled on: a missing `SHA256SUM
 rather than warning and skipping, and a tag that will not resolve **fails** rather than falling
 back to a branch.
 
-### Version 0.5.1 release management
+### Version 0.5.2 release management
 
 Version 0.5.0 provides a [generated project launcher and ownership-safe setup](src/project-host/README.md).
 A [product-owned CI setup action](.github/actions/setup-ds-skills/README.md) uses the same provisioning API.
@@ -182,6 +182,15 @@ Token-build preflight tolerates another cooperating builder releasing its exact
 lock or coordination guard between filesystem checks. Path, symlink, permission
 and protected-input checks remain enforced; ordinary artifact errors still fail.
 The directory-lock protocol continues to serialize builds and revalidate ownership.
+
+## Version 0.5.2 correction
+
+Config resolution tolerates a configured cooperative lock directory disappearing
+between path checks. The fallback requires that the exact directory leaf remains
+absent and its parent still resolves inside the project. During this fallback, a
+missing or non-directory parent and other errors fail closed. Ordinary path,
+symlink and containment checks remain unchanged; recreated targets do not take
+this fallback.
 
 ## Development
 
