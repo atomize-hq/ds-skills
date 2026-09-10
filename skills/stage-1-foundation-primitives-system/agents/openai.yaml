@@ -1,4 +1,4 @@
 interface:
   display_name: "Stage 1 Foundation System"
-  short_description: "Bootstrap primitives, tokens, and baseline stack conventions"
-  default_prompt: "Use $stage-1-foundation-primitives-system to establish the baseline Next.js, Tauri, Storybook, Figma, and token system needed before the component round-trip loop."
+  short_description: "Define configured primitives, tokens and evidence"
+  default_prompt: "Use $stage-1-foundation-primitives-system to establish the selected design-system baseline using this project's actual runtime, tokens and library ownership."

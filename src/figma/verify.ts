@@ -35,6 +35,8 @@ export interface RailBaseline {
 }
 
 export interface VerifyOptions {
+  /** Consumer root for input paths and the baseline source identity. Defaults to cwd. */
+  readonly rootDir?: string;
   readonly configPath: string;
   readonly expectPath: string;
   readonly artifactPath: string;
@@ -49,14 +51,19 @@ export interface VerifyResult {
 }
 
 export function verifyMapping(options: VerifyOptions): VerifyResult {
-  const config = readJson(options.configPath, "CONFIG");
-  const baseline = readJson(options.expectPath, "BASELINE") as RailBaseline;
-  const artifact = readJson(options.artifactPath, "ARTIFACT");
+  const root = path.resolve(options.rootDir ?? ".");
+  const config = readJson(path.resolve(root, options.configPath), "CONFIG");
+  const baseline = readJson(
+    path.resolve(root, options.expectPath),
+    "BASELINE",
+  ) as RailBaseline;
+  const artifactPath = path.resolve(root, options.artifactPath);
+  const artifact = readJson(artifactPath, "ARTIFACT");
   const errors: string[] = [];
 
   requireBaselineShape(baseline, options.expectPath);
   errors.push(...compareConfig(config, baseline));
-  errors.push(...compareArtifactIdentity(options.artifactPath, baseline));
+  errors.push(...compareArtifactIdentity(artifactPath, baseline, root));
 
   const expected = buildExpectedVariables(artifact, {
     extensionsNamespace: baseline.extensionsNamespace,
@@ -102,11 +109,12 @@ function compareConfig(config: unknown, baseline: RailBaseline): string[] {
 function compareArtifactIdentity(
   artifactPath: string,
   baseline: RailBaseline,
+  root: string,
 ): string[] {
   // Verifying a different artifact than the reference was captured from is a
   // green run that proves nothing about the artifact anyone ships.
   const given = path.resolve(artifactPath);
-  const recorded = path.resolve(baseline.source);
+  const recorded = path.resolve(root, baseline.source);
   return given === recorded
     ? []
     : [

@@ -1,17 +1,8 @@
 /**
- * The CT-8B status rail's *evaluation*, lifted out of the consumer's status
- * generator. Only the evaluation: the generator's other 611 lines are Storybook
- * proof coverage, Chromatic status, story inventory and claim profiles, and none
- * of that is rail.
- *
- * The consumer keeps the mapping to its report — including `claimRelevant`,
- * which is a product policy about whether CT-8B applies to a given change class,
- * not a rail question. So this answers "if the rail applies, what does it say?"
- * and the consumer decides whether it applies.
- *
- * Behaviour is pinned against outputs captured from the pre-move implementation
- * in __fixtures__/status-rail.baseline.json — expected values whose origin is
- * the old code, not this file describing itself.
+ * Publication-record evaluation shared by the ledger CLI and the product's
+ * component-evidence aggregation. Applicability belongs to reviewed project policy,
+ * not to this ledger evaluator. A conformant attestation is not a new live Figma scan.
+ * Baseline fixtures retain evidence of the pre-extraction evaluation behavior.
  */
 import { evaluateSyncLedgerConformance } from "./sync-ledger.mjs";
 

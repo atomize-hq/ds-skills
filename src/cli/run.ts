@@ -1,3 +1,5 @@
+import { runTokenValidationCommand } from "../tokens/command.mjs";
+import { runRecipesValidation } from "../recipes/command.mjs";
 import { CannotEvaluateError } from "../figma/profile.mjs";
 import { runValidateArtifactCli } from "../validate/artifact.mjs";
 import { commands, type CommandSpec } from "./commands.js";
@@ -92,6 +94,97 @@ async function runCommand(
   const name = command.path.join(" ");
 
   try {
+    if (name === "curation install" || name === "curation installed check") {
+      const { runCuratedInstallCommand } =
+        await import("../curation/install-command.mjs");
+      return await runCuratedInstallCommand(name, options, rest, json, io);
+    }
+    if (name.startsWith("curation ")) {
+      const { runCurationCommand } = await import("../curation/command.mjs");
+      return await runCurationCommand(name, options, rest, json, io);
+    }
+    if (name.startsWith("registries ")) {
+      const { runRegistryCommand } = await import("../registries/command.mjs");
+      return await runRegistryCommand(name, options, rest, json, io);
+    }
+    if (name.startsWith("libraries ")) {
+      const { runLibrariesCommand } = await import("../libraries/command.mjs");
+      return await runLibrariesCommand(name, options, rest, json, io);
+    }
+    if (name.startsWith("foundations ")) {
+      const { runFoundationsCommand } =
+        await import("../foundations/command.mjs");
+      return await runFoundationsCommand(name, options, rest, json, io);
+    }
+    if (name.startsWith("sources ")) {
+      const { runSourceCheckCommand } =
+        await import("../source-checks/command.mjs");
+      return await runSourceCheckCommand(name, options, rest, json, io);
+    }
+    if (name.startsWith("components ")) {
+      const { runComponentsCommand } =
+        await import("../components/command.mjs");
+      return await runComponentsCommand(name, options, rest, json, io);
+    }
+    if (name === "chromatic review publish") {
+      const { runChromaticPublishCommand } =
+        await import("../chromatic/publish-command.mjs");
+      return await runChromaticPublishCommand(options, rest, json, io);
+    }
+    if (name.startsWith("chromatic status ")) {
+      const { runChromaticStatusCommand } =
+        await import("../chromatic/command.mjs");
+      return await runChromaticStatusCommand(name, options, rest, json, io);
+    }
+    if (name.startsWith("storybook proof ")) {
+      const { runStorybookProofCommand } =
+        await import("../storybook/proof-command.mjs");
+      return await runStorybookProofCommand(name, options, rest, json, io);
+    }
+    if (name === "storybook policy validate") {
+      const { runStorybookPolicyCommand } =
+        await import("../storybook/command.mjs");
+      return runStorybookPolicyCommand(options, rest, json, io);
+    }
+    if (name === "project setup" || name === "project check") {
+      const { runProjectCommand } = await import("../project-host/command.mjs");
+      return await runProjectCommand(name, options, rest, json, io);
+    }
+    if (name === "release verify" || name === "release install") {
+      const { runReleaseCommand } = await import("../install/command.mjs");
+      return await runReleaseCommand(name, options, rest, json, io);
+    }
+    if (name === "tokens govern") {
+      const { runTokenGovernanceCommand } =
+        await import("../tokens/governance.mjs");
+      return await runTokenGovernanceCommand(options, rest, json, io);
+    }
+    if (name === "tokens guard") {
+      const { runTokenManualGuardCommand } =
+        await import("../tokens/manual-guard.mjs");
+      return runTokenManualGuardCommand(options, rest, json, io);
+    }
+    if (name === "tokens runtime check") {
+      const { runTokenRuntimeCheckCommand } =
+        await import("../tokens/runtime-check.mjs");
+      return runTokenRuntimeCheckCommand(options, rest, json, io);
+    }
+    if (name === "tokens build") {
+      const { runTokenBuildCommand } =
+        await import("../tokens/build-command.mjs");
+      return await runTokenBuildCommand(options, rest, json, io);
+    }
+    if (name === "tokens artifacts check") {
+      const { runTokenArtifactCheckCommand } =
+        await import("../tokens/artifact-check.mjs");
+      return await runTokenArtifactCheckCommand(options, rest, json, io);
+    }
+    if (name === "tokens validate") {
+      return runTokenValidationCommand(options, rest, json, io);
+    }
+    if (name === "recipes validate") {
+      return runRecipesValidation(options, rest, json, io);
+    }
     if (name === "validate") {
       return runValidateArtifactCli([...rest, ...profileArgs(options)], io);
     }

@@ -17,12 +17,15 @@ value someone changed inside Figma surfaces as a reviewable finding, not a silen
 
 ## Install
 
+This checkout describes version 0.5.0. Use the following URL after that immutable
+release is published; a missing release is an error, not permission to fall back.
+
 Provisioning and execution are separate operations. Provisioning installs one exact reviewed
 release and may reach the network; execution runs that binary and resolves nothing — no registry,
 no `latest`, no PATH lookup.
 
 ```bash
-curl -fsSL https://github.com/atomize-hq/ds-skills/releases/download/v0.4.0/install.sh -o install.sh
+curl -fsSL https://github.com/atomize-hq/ds-skills/releases/download/v0.5.0/install.sh -o install.sh
 # CI: verify install.sh against your committed ds-skills.release.json, then run it. Never pipe.
 bash install.sh
 ```
@@ -59,6 +62,24 @@ bootstrap establishes payload integrity rather than moving the question along. T
 divergences from the reference installer it is modelled on: a missing `SHA256SUMS` **fails**
 rather than warning and skipping, and a tag that will not resolve **fails** rather than falling
 back to a branch.
+
+### Version 0.5.0 release management
+
+Version 0.5.0 provides a [generated project launcher and ownership-safe setup](src/project-host/README.md).
+A [product-owned CI setup action](.github/actions/setup-ds-skills/README.md) uses the same provisioning API.
+These capabilities are not available in the historical v0.4.0 release.
+
+Version 0.5.0 adds [product-owned v2 release verification and acquisition](src/install/README.md),
+including sealed installed-file digests. These commands require a new v2 reviewed pin;
+they are not features of v0.4.0. Each consumer must explicitly adopt a reviewed
+pin and regenerate its launcher and discovery outputs.
+
+### Storybook policy checks
+
+Version 0.5.0 includes [configured Storybook policy validation](src/storybook/README.md):
+inventory consistency, policy-defined tiers/consumers, and version-policy structure.
+This is a structural check, not executed component readiness or publication proof.
+It requires tier policy version 2 and is not in the published v0.4.0 release.
 
 ## Configure
 
@@ -167,10 +188,77 @@ installs it — including the negative cases, the five-platform matrix, and two 
 configured consumers. It needs `tokei` (the LOC guard) and `pwsh` (the Windows installer's
 tests); both fail loudly rather than being skipped.
 
+For release verification against private consumer identities, set
+`DS_SKILLS_PRIVATE_IDENTIFIERS_FILE` to an external, untracked local file before running
+`pnpm pack-check`. Put one nonempty literal identifier on each LF-terminated line, with no
+leading or trailing whitespace. The check performs case-insensitive fixed-string matching over
+every staged path and text file, including tests and fixtures; without that file it reports only
+the structural disclosure checks rather than claiming consumer-identity coverage.
+
 ```bash
-pnpm release:stage --release v0.4.0   # stage candidate assets into ./release
-pnpm rehearse <consumer-checkout> <cli>   # dry-run a consumer cutover in a disposable clone
+pnpm release:stage --release <new-version>   # stage candidate assets into ./release
 ```
 
-`rehearse` is deliberately not part of `pnpm check`: a portable package's own gate must not
-require a particular consumer to exist.
+Use an isolated real consumer and its explicit project configuration to verify a
+cutover through the pinned launcher. The obsolete fixed-layout rehearsal command
+is removed: it assumed one consumer's paths and accepted an arbitrary CLI path.
+The package gate must not require a particular consumer checkout. Live publication
+and actual consumer integration remain separate release requirements; synthetic
+package fixtures are not substitutes.
+
+### Consumer-owned source rules
+
+`ds-skills sources policy check` and `ds-skills sources contract check` run
+configured text invariants and static module/slot checks from the installed
+product. Library identities, source roots, and local obligations remain consumer
+data; they are not fixed supported-package names. See
+[configuration, semantics and limits](src/source-checks/README.md). These checks do
+not replace application typechecks or establish component publication/readiness.
+
+### Foundations specimens
+
+`ds-skills foundations build` and `ds-skills foundations check` assemble and verify
+a self-contained Figma specimen script from project token/model/presentation data.
+The commands do **not** execute it or publish tokens. See the
+[configuration, guarded rendering, and verification boundaries](src/foundations/README.md).
+
+### Library source evidence
+
+`ds-skills libraries evidence capture/check/diff` commands collect and
+compare explicit multiple-library source selections, with exact package/Git/content
+identity and separately reviewed evidence pins. Source declarations are not yet
+semantic skill curation. See [configuration, review lifecycle and limits](src/libraries/README.md).
+
+### Registry snapshots
+
+`ds-skills registries capture/check/diff` commands acquire explicit
+multi-registry sources, preserve full payload/file identity, and keep pin checks
+offline. Reviewed snapshots feed the library-evidence pipeline without another
+network request. See [supported registry format, limits and review flow](src/registries/README.md).
+
+### Project-specific skill curation
+
+The reusable `curate-component-libraries` skill guides agent-authored, source-grounded
+guidance for configured libraries. `curation validate/build/check/diff`
+commands validate provenance and build reviewable namespaced skill bundles.
+`curation install` materializes exact reviewed bundles into both project discovery
+surfaces; `curation installed check` checks owned output and release/input skew.
+These operations do not certify semantic correctness or execute examples. See
+[the curation contract and current boundaries](src/curation/README.md).
+
+### Portable skill workflows
+
+The pack owns nine reusable workflows: routing, foundations, Storybook,
+component round trips, layout assembly, library component implementation, interactive
+workspace composition, library curation and quality reconciliation. Start with
+[the stack router](skills/stack-orchestrator/SKILL.md) and follow only the workflow
+needed by the task. Frameworks, native boundaries, libraries, paths and evidence
+profiles come from the consumer, not fixed stack assumptions.
+
+Library-specific API guidance is reviewed, generated project output, not a static
+supported-package catalog. AI Elements can be an explicitly configured source just
+like a different component library; the shared pack does not embed one consumer's
+API imports, registry installation commands or editor choice. Installed core and
+custom output have separate integrity gates. Product installation does not establish
+consumer readiness, live publication, or repository landing: each requires its own
+evidence and applicable review/CI gates. Historical v0.4.0 is unchanged.

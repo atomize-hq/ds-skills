@@ -22,9 +22,21 @@ async function capture(argv: readonly string[]) {
 }
 
 describe("command registry", () => {
-  it("carries all ten commands, including the four the inventory found", () => {
+  it("carries the existing commands plus portable recipe validation", () => {
     const names = commands.map((c) => c.path.join(" "));
-    expect(names).toHaveLength(10);
+    expect(names).toHaveLength(48);
+    expect(names).toContain("storybook policy validate");
+    expect(names).toContain("project setup");
+    expect(names).toContain("project check");
+    expect(names).toContain("release verify");
+    expect(names).toContain("release install");
+    expect(names).toContain("tokens govern");
+    expect(names).toContain("tokens guard");
+    expect(names).toContain("tokens runtime check");
+    expect(names).toContain("tokens build");
+    expect(names).toContain("tokens artifacts check");
+    expect(names).toContain("tokens validate");
+    expect(names).toContain("recipes validate");
     // The four that were discovered rather than designed. Losing one means the
     // consumer keeps a rail executable, and a published release cannot add it.
     expect(names).toContain("ledger parity");

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Stage 3 Layout Assembler"
+  short_description: "Compose verified components into layouts and screens"
+  default_prompt: "Use $stage-3-organism-layout-assembler to assemble the selected screen using actual component, state and runtime contracts."

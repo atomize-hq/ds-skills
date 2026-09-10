@@ -35,3 +35,33 @@ jobs:
       # tests, build, smoke, and the installed-artifact gate. Listing the steps
       # separately here is how CI and `pnpm check` drift apart.
       - run: pnpm check
+
+      # Test the actual composite-action boundary, not only its Node entry point.
+      - name: Stage an isolated setup-action fixture
+        id: action-fixture
+        run: |
+          fixture="$RUNNER_TEMP/ds-skills-action"
+          mkdir -p "$fixture/project"
+          node scripts/release/stage.mjs --release v0.0.0-action-ci --out "$fixture/release"
+          cp "$fixture/release/ds-skills.release.json" "$fixture/project/ds-skills.release.json"
+          node scripts/checks/serve-release.mjs "$fixture/release" "$fixture/port" > "$fixture/server.log" 2>&1 &
+          echo $! > "$fixture/pid"
+          for attempt in $(seq 1 100); do test -s "$fixture/port" && break; sleep 0.1; done
+          test -s "$fixture/port"
+          echo "project=$fixture/project" >> "$GITHUB_OUTPUT"
+          echo "mirror=http://127.0.0.1:$(cat "$fixture/port")" >> "$GITHUB_OUTPUT"
+      - uses: ./.github/actions/setup-ds-skills
+        id: ds-setup
+        with:
+          project-directory: ${{ steps.action-fixture.outputs.project }}
+          release-mirror: ${{ steps.action-fixture.outputs.mirror }}
+      - name: Verify action-installed project
+        run: node "$DS_SKILLS_LAUNCHER" --check
+        env:
+          DS_SKILLS_LAUNCHER: ${{ steps.ds-setup.outputs.launcher }}
+          DS_SKILLS_PREFIX: ${{ steps.ds-setup.outputs.prefix }}
+      - name: Stop isolated action fixture server
+        if: always()
+        run: |
+          pidfile="$RUNNER_TEMP/ds-skills-action/pid"
+          if test -f "$pidfile"; then kill "$(cat "$pidfile")" 2>/dev/null || true; fi

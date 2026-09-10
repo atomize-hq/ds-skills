@@ -1,5 +1,5 @@
 {
-  "policyVersion": "1",
+  "policyVersion": "2",
   "tierOrder": ["primitive", "interactive", "workflow"],
   "tiers": {
     "primitive": {
@@ -8,10 +8,25 @@
           "kind": "default",
           "purpose": "Baseline proof that the component renders at all."
         },
-        { "kind": "docs", "purpose": "Reviewer-visible contract surface." }
+        {
+          "kind": "docs",
+          "purpose": "Reviewer-visible contract surface."
+        }
       ],
-      "defaultOptionalKinds": ["variant-matrix", "state-matrix", "responsive"],
-      "consumerScope": ["THR-02"]
+      "defaultOptionalKinds": [
+        "variant-matrix",
+        "state-matrix",
+        "actions",
+        "controlled",
+        "keyboard",
+        "focus",
+        "workflow",
+        "motion",
+        "async",
+        "responsive",
+        "composition"
+      ],
+      "consumerScope": ["ui-review"]
     },
     "interactive": {
       "minimumRequiredKinds": [
@@ -19,7 +34,10 @@
           "kind": "default",
           "purpose": "Baseline proof that the component renders at all."
         },
-        { "kind": "docs", "purpose": "Reviewer-visible contract surface." },
+        {
+          "kind": "docs",
+          "purpose": "Reviewer-visible contract surface."
+        },
         {
           "kind": "actions",
           "purpose": "Emitted events must be visible, not inferred from source."
@@ -30,9 +48,14 @@
         "state-matrix",
         "controlled",
         "keyboard",
-        "focus"
+        "focus",
+        "workflow",
+        "motion",
+        "async",
+        "responsive",
+        "composition"
       ],
-      "consumerScope": ["THR-02"]
+      "consumerScope": ["ui-review"]
     },
     "workflow": {
       "minimumRequiredKinds": [
@@ -40,14 +63,29 @@
           "kind": "default",
           "purpose": "Baseline proof that the component renders at all."
         },
-        { "kind": "docs", "purpose": "Reviewer-visible contract surface." },
+        {
+          "kind": "docs",
+          "purpose": "Reviewer-visible contract surface."
+        },
         {
           "kind": "workflow",
           "purpose": "A multi-step path is only proven by replaying it."
         }
       ],
-      "defaultOptionalKinds": ["actions", "controlled", "motion", "async"],
-      "consumerScope": ["THR-02"]
+      "defaultOptionalKinds": [
+        "variant-matrix",
+        "state-matrix",
+        "actions",
+        "controlled",
+        "keyboard",
+        "focus",
+        "motion",
+        "async",
+        "responsive",
+        "composition"
+      ],
+      "consumerScope": ["ui-review"]
     }
-  }
+  },
+  "consumerIds": ["ui-review"]
 }

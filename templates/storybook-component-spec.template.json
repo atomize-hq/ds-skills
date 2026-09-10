@@ -14,7 +14,7 @@
     "runtimeParity": null
   },
   "downstreamHooks": {
-    "codeEntrypoint": "src/components/ui/button.tsx",
+    "codeEntrypoint": "components/button.tsx",
     "figmaComponentRef": null,
     "supportedVariantsSource": null,
     "slotNamesSource": null,

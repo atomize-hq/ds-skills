@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ds-skills.local/schemas/sync-ledger.schema.json",
   "title": "Sync Ledger (v3)",
-  "description": "One ledger per repo recording the state of the token->Figma publish rail: which artifact revision was published, by which rail, whether it was verified, how far it has been promoted, and which publish proof attests to it. v3 adds the `publication` binding, so the facts this ledger duplicates from the proof become a checked projection of one identified attestation instead of an uncorroborated copy. Replaces the v1 per-component scope/name/links/status/drift shape, which is retired along with its codeConnect field.",
+  "description": "One ledger per repo recording the state of the token->Figma publish rail: which artifact revision was published, by which rail, whether it was verified, how far it has been promoted, and which publish proof attests to it. v3 adds the `publication` binding, so the facts this ledger duplicates from the proof become a checked projection of one identified attestation instead of an uncorroborated copy. It records token publication, not per-component review or eligibility.",
   "type": "object",
   "required": [
     "ledgerVersion",

@@ -69,6 +69,8 @@ function pluginBuild(options: Options, io: Streams): number {
 
 function verify(options: Options, io: Streams): number {
   const result = verifyMapping({
+    rootDir:
+      options["root"] === undefined ? undefined : required(options, "root"),
     configPath: required(options, "config"),
     expectPath: required(options, "expect"),
     artifactPath: required(options, "artifact"),

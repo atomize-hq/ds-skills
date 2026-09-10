@@ -10,6 +10,7 @@
  * permitted publish modes. §7.3: copying one layout under another directory
  * name proves nothing about portability.
  */
+import { configureBuildFixture } from "./make-token-artifacts.mjs";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -179,3 +180,67 @@ write("observed-drifted.json", {
 });
 
 process.stdout.write(`${flavour} consumer written to ${dir}\n`);
+
+// Recipe inputs differ in path, component identity, axis and slot. These are
+// consumer data, not a registration list consumed by the product.
+const recipes = flavour === "alpha" ? "recipes" : "packages/ui/recipes";
+const componentId = flavour === "alpha" ? "notice" : "editor";
+const axis = flavour === "alpha" ? "intent" : "density";
+const slot = flavour === "alpha" ? "body" : "surface";
+fs.mkdirSync(path.join(dir, recipes), { recursive: true });
+write(`${recipes}/${componentId}.recipe.json`, {
+  recipeVersion: "1",
+  componentId,
+  variantAxes: [{ name: axis, values: ["normal", "quiet"] }],
+  defaults: { variants: { [axis]: "normal" }, state: "idle" },
+  slots: { [slot]: { color: "{brand.base}" } },
+  states: { idle: { [slot]: { color: "{brand.contrast}" } } },
+  fallbacks: { missingVariantBehavior: "use-defaults", stateFallbacks: {} },
+});
+write("recipe-test-input.json", { recipes, componentId });
+
+// Canonical family sources and theme policy for the portable token validator.
+const artifact = JSON.parse(
+  fs.readFileSync(path.join(dir, "artifact.json"), "utf8"),
+);
+fs.mkdirSync(path.join(dir, shape.tokenSourcePath), { recursive: true });
+for (const [family, document] of Object.entries(artifact)) {
+  if (!family.startsWith("$"))
+    write(`${shape.tokenSourcePath}/${family}.tokens.json`, document);
+}
+fs.mkdirSync(path.join(dir, "themes"));
+write("themes/registry.json", {
+  registryVersion: "1",
+  defaultThemeId: shape.theme,
+  terminalFallbackThemeId: shape.theme,
+  unknownThemeIdBehavior: "error",
+  themes: [
+    { id: shape.theme, file: "base.json", required: true, extends: null },
+    {
+      id: shape.otherTheme,
+      file: "other.json",
+      required: false,
+      extends: shape.theme,
+    },
+  ],
+});
+write("themes/base.json", {
+  $extensions: { [shape.namespace]: { themeId: shape.theme } },
+});
+write("themes/other.json", {
+  $extensions: { [shape.namespace]: { themeId: shape.otherTheme } },
+  ...artifact.$themeOverrides[shape.otherTheme],
+});
+write("project.json", {
+  projectVersion: "1",
+  tokens: {
+    format: "family-files-v1",
+    sourceDir: shape.tokenSourcePath,
+    recipesDir: recipes,
+    extensionsNamespace: shape.namespace,
+    themes: { registry: "themes/registry.json", directory: "themes" },
+    figma: { excludedFamilies: [] },
+  },
+});
+
+await configureBuildFixture(dir, flavour);

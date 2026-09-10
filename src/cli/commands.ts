@@ -1,5 +1,13 @@
+import { curationCommands } from "./curation-commands.js";
+import { registriesCommands } from "./registries-commands.js";
+import { librariesCommands } from "./libraries-commands.js";
+import { foundationsCommands } from "./foundations-commands.js";
+import { sourceChecksCommands } from "./source-checks-commands.js";
+import { componentsCommands } from "./components-commands.js";
+import { chromaticCommands } from "./chromatic-commands.js";
+import { storybookCommands } from "./storybook-commands.js";
 /**
- * The ten commands. Four of them — `ledger parity`, `proof validate`,
+ * The implemented commands. Four of them — `ledger parity`, `proof validate`,
  * `figma serve`, `figma baseline` — were found by the consumer's disposition
  * inventory rather than designed, and without them the consumer cannot reach
  * zero rail executables.
@@ -28,6 +36,130 @@ export interface CommandSpec {
 }
 
 export const commands: readonly CommandSpec[] = [
+  ...sourceChecksCommands,
+  ...foundationsCommands,
+  ...librariesCommands,
+  ...registriesCommands,
+  ...curationCommands,
+  ...componentsCommands,
+  ...storybookCommands,
+  ...chromaticCommands,
+  {
+    path: ["project", "setup"],
+    summary:
+      "Install the verified project launcher without overwriting unowned files",
+    usage: "ds-skills project setup --root <project> [--prefix <directory>]",
+    machineReadable: true,
+    effect: "writes",
+    implemented: true,
+    requiresArguments: true,
+  },
+  {
+    path: ["project", "check"],
+    summary:
+      "Check project launcher ownership and pinned installation integrity",
+    usage: "ds-skills project check --root <project> [--prefix <directory>]",
+    machineReadable: true,
+    effect: "read-only",
+    implemented: true,
+    requiresArguments: true,
+  },
+  {
+    path: ["release", "verify"],
+    summary:
+      "Verify installed bytes and identity against a reviewed release pin",
+    usage:
+      "ds-skills release verify --record <reviewed-pin.json> [--prefix <directory>]",
+    machineReadable: true,
+    effect: "read-only",
+    implemented: true,
+    requiresArguments: true,
+  },
+  {
+    path: ["release", "install"],
+    summary: "Acquire and verify the explicitly pinned release",
+    usage:
+      "ds-skills release install --record <reviewed-pin.json> [--prefix <directory>] [--mirror <base-url>] [--force]",
+    machineReadable: true,
+    effect: "writes",
+    implemented: true,
+    requiresArguments: true,
+  },
+  {
+    path: ["tokens", "govern"],
+    summary:
+      "Validate, guard, regenerate and check configured token and publication obligations",
+    usage:
+      "ds-skills tokens govern --config <project.json> [--root <directory>]",
+    machineReadable: true,
+    effect: "writes",
+    implemented: true,
+    requiresArguments: true,
+  },
+  {
+    path: ["tokens", "guard"],
+    summary:
+      "Apply the configured Git input-dirty guard before runtime regeneration",
+    usage:
+      "ds-skills tokens guard --config <project.json> [--root <directory>]",
+    machineReadable: true,
+    effect: "read-only",
+    implemented: true,
+    requiresArguments: true,
+  },
+  {
+    path: ["tokens", "runtime", "check"],
+    summary:
+      "Check configured runtime CSS compatibility and import obligations",
+    usage:
+      "ds-skills tokens runtime check --config <project.json> [--root <directory>]",
+    machineReadable: true,
+    effect: "read-only",
+    implemented: true,
+    requiresArguments: true,
+  },
+  {
+    path: ["tokens", "build"],
+    summary:
+      "Build configured token artifacts with serialized atomic file writes",
+    usage:
+      "ds-skills tokens build --config <project.json> [--root <directory>]",
+    machineReadable: true,
+    effect: "writes",
+    implemented: true,
+    requiresArguments: true,
+  },
+  {
+    path: ["tokens", "artifacts", "check"],
+    summary: "Compare configured token artifacts against complete regeneration",
+    usage:
+      "ds-skills tokens artifacts check --config <project.json> [--root <directory>]",
+    machineReadable: true,
+    effect: "read-only",
+    implemented: true,
+    requiresArguments: true,
+  },
+  {
+    path: ["tokens", "validate"],
+    summary: "Validate configured token sources, theme graphs and recipes",
+    usage:
+      "ds-skills tokens validate --config <project.json> [--root <directory>]",
+    machineReadable: true,
+    effect: "read-only",
+    implemented: true,
+    requiresArguments: true,
+  },
+  {
+    path: ["recipes", "validate"],
+    summary:
+      "Validate recipe shape, intrinsic consistency and token references",
+    usage:
+      "ds-skills recipes validate --recipes <directory> --tokens <artifact.json>",
+    machineReadable: true,
+    effect: "read-only",
+    implemented: true,
+    requiresArguments: true,
+  },
   {
     path: ["figma", "plugin", "build"],
     summary: "Generate the Figma plugin from a consumer config",
@@ -41,7 +173,7 @@ export const commands: readonly CommandSpec[] = [
     path: ["figma", "verify"],
     summary: "Compare a token artifact against reviewed baseline data",
     usage:
-      "ds-skills figma verify --config <path> --expect <path> --artifact <path>",
+      "ds-skills figma verify --config <path> --expect <path> --artifact <path> [--root <dir>]",
     machineReadable: false,
     effect: "read-only",
     implemented: true,

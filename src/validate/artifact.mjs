@@ -1,12 +1,10 @@
 #!/usr/bin/env node
 // Generic, dependency-free validator for the schemas in ../schemas.
 //
-// This deliberately does NOT reimplement any repo's validators. A repo that owns
-// these artifacts should keep its own semantic validators (cross-field rules,
-// filesystem checks, referential integrity) and wire those into CI. This script
-// exists for the other case: a repo that has adopted the schemas but not yet
-// written the tooling, and for checking a hand-authored file against the shape
-// before committing it.
+// Shape checks complement the product-owned semantic commands for cross-field,
+// filesystem and referential rules. Consumers supply configuration and actual
+// artifacts, not another implementation of these validators. A shape-only pass
+// does not replace the applicable source, recipe, component or publication checks.
 //
 // Usage:
 //   node validate-artifact.mjs <schema.json> <instance.json> [--profile <profile.json>]

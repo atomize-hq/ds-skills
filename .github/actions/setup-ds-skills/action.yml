@@ -1,0 +1,35 @@
+name: Set up pinned ds-skills
+description: Verify a reviewed project pin, explicitly acquire its release, and install owned project skills and launcher.
+inputs:
+  project-directory:
+    description: Project path, relative to GITHUB_WORKSPACE unless absolute.
+    default: .
+    required: false
+  install-prefix:
+    description: Install prefix, relative to GITHUB_WORKSPACE unless absolute. Defaults to RUNNER_TEMP/ds-skills.
+    required: false
+  release-mirror:
+    description: Optional release mirror. Pinned bootstrap and payload digests remain authoritative.
+    required: false
+outputs:
+  release:
+    description: Verified release selected by the project pin.
+    value: ${{ steps.setup.outputs.release }}
+  prefix:
+    description: Absolute installation prefix. Set DS_SKILLS_PREFIX to this value for subsequent commands.
+    value: ${{ steps.setup.outputs.prefix }}
+  launcher:
+    description: Absolute generated project launcher path.
+    value: ${{ steps.setup.outputs.launcher }}
+runs:
+  using: composite
+  steps:
+    - name: Verify and install the pinned project
+      id: setup
+      shell: bash
+      env:
+        DS_SKILLS_ACTION_PATH: ${{ github.action_path }}
+        DS_SKILLS_ACTION_PROJECT: ${{ inputs.project-directory }}
+        DS_SKILLS_ACTION_PREFIX: ${{ inputs.install-prefix }}
+        DS_SKILLS_ACTION_MIRROR: ${{ inputs.release-mirror }}
+      run: node "$DS_SKILLS_ACTION_PATH/setup.mjs"

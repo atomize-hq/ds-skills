@@ -1,3 +1,5 @@
+import { deepEqual, join, label, describe } from "./schema-values.mjs";
+
 /**
  * The JSON Schema subset this package implements, split out of artifact.mjs
  * when the package adopted the 300-code-line guard. The seam is real: above it
@@ -24,6 +26,7 @@ export const SUPPORTED = new Set([
   "const",
   "required",
   "properties",
+  "propertyNames",
   "additionalProperties",
   "items",
   "minLength",
@@ -224,6 +227,17 @@ function checkObject(value, node, ctx, errors) {
     }
   }
 
+  if (node.propertyNames !== undefined) {
+    for (const key of keys) {
+      errors.push(
+        ...validate(key, node.propertyNames, {
+          ...ctx,
+          path: `${join(ctx.path, key)} (property name)`,
+        }),
+      );
+    }
+  }
+
   const properties = node.properties ?? {};
   for (const [key, subSchema] of Object.entries(properties)) {
     if (Object.prototype.hasOwnProperty.call(value, key)) {
@@ -302,29 +316,4 @@ function checkCombinators(value, node, ctx, errors) {
       errors.push(...branchErrors);
     }
   }
-}
-
-function deepEqual(a, b) {
-  if (a === b) return true;
-  if (typeof a !== typeof b || a === null || b === null) return false;
-  if (typeof a !== "object") return false;
-  if (Array.isArray(a) !== Array.isArray(b)) return false;
-  const aKeys = Object.keys(a);
-  const bKeys = Object.keys(b);
-  if (aKeys.length !== bKeys.length) return false;
-  return aKeys.every((key) => deepEqual(a[key], b[key]));
-}
-
-function join(base, key) {
-  return base ? `${base}.${key}` : key;
-}
-
-function label(pointer) {
-  return pointer === "" ? "(root)" : pointer;
-}
-
-function describe(value) {
-  if (value === null) return "null";
-  if (Array.isArray(value)) return "array";
-  return typeof value;
 }
