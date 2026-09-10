@@ -48,6 +48,10 @@ export function preflightTokenWrites(project) {
       project.rootDir,
       current.file,
       current.id === "lock" ? "directory" : "file",
+      {
+        cooperativeLockTarget:
+          current.id === "lock" || current.id === "lock-guard",
+      },
     );
   }
   return outputs;
@@ -61,7 +65,7 @@ function within(root, file) {
     rel !== ".." && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel)
   );
 }
-export function assertWritePath(root, target, kind = "file") {
+export function assertWritePath(root, target, kind = "file", options = {}) {
   if (!within(root, target) || path.resolve(root) === path.resolve(target))
     fail(`Write path escapes or replaces project root: ${target}`);
   const segments = path.relative(root, target).split(path.sep);
@@ -89,6 +93,10 @@ export function assertWritePath(root, target, kind = "file") {
         final && kind === "file" ? fs.constants.W_OK : fs.constants.X_OK,
       );
     } catch (error) {
+      // A cooperating builder may release this exact lock/guard leaf after lstat.
+      // Ancestors and ordinary artifacts are not transient; never relax them.
+      if (options.cooperativeLockTarget && final && error.code === "ENOENT")
+        break;
       throw writeError(current, error);
     }
     if (info.isDirectory()) last = current;
@@ -96,7 +104,21 @@ export function assertWritePath(root, target, kind = "file") {
   try {
     fs.accessSync(last, fs.constants.W_OK | fs.constants.X_OK);
   } catch (error) {
-    throw writeError(last, error);
+    if (
+      !options.cooperativeLockTarget ||
+      kind !== "directory" ||
+      last !== target ||
+      error.code !== "ENOENT"
+    )
+      throw writeError(last, error);
+    // The selected lock directory vanished after its first access check.
+    // Its stable parent must still be writable/searchable before acquisition.
+    const parent = path.dirname(target);
+    try {
+      fs.accessSync(parent, fs.constants.W_OK | fs.constants.X_OK);
+    } catch (parentError) {
+      throw writeError(parent, parentError);
+    }
   }
 }
 export function writeError(file, error) {
