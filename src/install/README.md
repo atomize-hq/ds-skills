@@ -1,9 +1,9 @@
 # Product-owned release resolution and acquisition
 
-This is the version-2 **candidate** contract. Published v0.4.0 pins do not carry
+Version 0.5.0 uses this version-2 contract. Historical v0.4.0 pins do not carry
 its sealed manifest and cannot satisfy it; migrating a consumer requires a new
-reviewed release pin, not an integrity bypass. Project bootstrap/launcher and
-safe two-agent skill discovery are still required extraction work.
+reviewed release pin, not an integrity bypass. The [project installation contract](../project-host/README.md)
+provides the pinned launcher and ownership-safe Codex/Claude skill discovery.
 
 ```sh
 ds-skills release verify --record ds-skills.release.json --prefix /path/to/prefix --json

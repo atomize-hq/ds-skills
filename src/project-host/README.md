@@ -1,7 +1,6 @@
 # Pinned project installation
 
-Candidate functionality on the separation branch; not in the public v0.4.0
-release. Requires a reviewed version-2 release pin and a release containing the
+Available in version 0.5.0; not in the historical v0.4.0 release. Requires a reviewed version-2 release pin and a release containing the
 prebuilt project launcher. Do not rewrite an existing release's identity to adopt
 this interface.
 

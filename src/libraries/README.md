@@ -1,7 +1,7 @@
-# Local library evidence (candidate commands)
+# Local library evidence
 
 This capability collects **selected source evidence**, not a curated skill or a
-component-readiness/publication result. These commands are not in public v0.4.0.
+component-readiness/publication result. These commands require version 0.5.0 or later; v0.4.0 does not provide them.
 The installed product contains the parser; consumers need no compiler dependency.
 
 ## Root configuration

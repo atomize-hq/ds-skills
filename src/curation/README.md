@@ -1,10 +1,10 @@
-# Curated library skill bundles (candidate commands)
+# Curated library skill bundles
 
 The product owns semantic curation instructions in
 [`curate-component-libraries`](../../skills/curate-component-libraries/SKILL.md).
 The running agent reads actual pinned source and authors project-specific guidance;
 the deterministic CLI does not invoke a model or certify prose as true. No public
-v0.4.0 command provides this candidate capability.
+v0.4.0 command provides this capability; it requires version 0.5.0 or later.
 
 See the self-contained [definition/configuration/review contract](../../skills/curate-component-libraries/references/contract.md).
 

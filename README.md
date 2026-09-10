@@ -17,12 +17,15 @@ value someone changed inside Figma surfaces as a reviewable finding, not a silen
 
 ## Install
 
+This checkout describes version 0.5.0. Use the following URL after that immutable
+release is published; a missing release is an error, not permission to fall back.
+
 Provisioning and execution are separate operations. Provisioning installs one exact reviewed
 release and may reach the network; execution runs that binary and resolves nothing — no registry,
 no `latest`, no PATH lookup.
 
 ```bash
-curl -fsSL https://github.com/atomize-hq/ds-skills/releases/download/v0.4.0/install.sh -o install.sh
+curl -fsSL https://github.com/atomize-hq/ds-skills/releases/download/v0.5.0/install.sh -o install.sh
 # CI: verify install.sh against your committed ds-skills.release.json, then run it. Never pipe.
 bash install.sh
 ```
@@ -60,20 +63,20 @@ divergences from the reference installer it is modelled on: a missing `SHA256SUM
 rather than warning and skipping, and a tag that will not resolve **fails** rather than falling
 back to a branch.
 
-### Candidate release management
+### Version 0.5.0 release management
 
-The candidate also provides a [generated project launcher and ownership-safe setup](src/project-host/README.md).
+Version 0.5.0 provides a [generated project launcher and ownership-safe setup](src/project-host/README.md).
 A [product-owned CI setup action](.github/actions/setup-ds-skills/README.md) uses the same provisioning API.
-These are not yet available in the public v0.4.0 release.
+These capabilities are not available in the historical v0.4.0 release.
 
-The separation branch adds [product-owned v2 release verification and acquisition](src/install/README.md),
+Version 0.5.0 adds [product-owned v2 release verification and acquisition](src/install/README.md),
 including sealed installed-file digests. These commands require a new v2 reviewed pin;
-they are not features of the published v0.4.0 example above. Project launcher/discovery
-cutover and final release publication remain pending.
+they are not features of v0.4.0. Each consumer must explicitly adopt a reviewed
+pin and regenerate its launcher and discovery outputs.
 
-### Candidate Storybook policy checks
+### Storybook policy checks
 
-The separation candidate includes [configured Storybook policy validation](src/storybook/README.md):
+Version 0.5.0 includes [configured Storybook policy validation](src/storybook/README.md):
 inventory consistency, policy-defined tiers/consumers, and version-policy structure.
 This is a structural check, not executed component readiness or publication proof.
 It requires tier policy version 2 and is not in the published v0.4.0 release.
@@ -221,14 +224,14 @@ The commands do **not** execute it or publish tokens. See the
 
 ### Library source evidence
 
-Candidate `ds-skills libraries evidence capture/check/diff` commands collect and
+`ds-skills libraries evidence capture/check/diff` commands collect and
 compare explicit multiple-library source selections, with exact package/Git/content
 identity and separately reviewed evidence pins. Source declarations are not yet
 semantic skill curation. See [configuration, review lifecycle and limits](src/libraries/README.md).
 
 ### Registry snapshots
 
-Candidate `ds-skills registries capture/check/diff` commands acquire explicit
+`ds-skills registries capture/check/diff` commands acquire explicit
 multi-registry sources, preserve full payload/file identity, and keep pin checks
 offline. Reviewed snapshots feed the library-evidence pipeline without another
 network request. See [supported registry format, limits and review flow](src/registries/README.md).
@@ -236,7 +239,7 @@ network request. See [supported registry format, limits and review flow](src/reg
 ### Project-specific skill curation
 
 The reusable `curate-component-libraries` skill guides agent-authored, source-grounded
-guidance for configured libraries. Candidate `curation validate/build/check/diff`
+guidance for configured libraries. `curation validate/build/check/diff`
 commands validate provenance and build reviewable namespaced skill bundles.
 `curation install` materializes exact reviewed bundles into both project discovery
 surfaces; `curation installed check` checks owned output and release/input skew.
@@ -245,7 +248,7 @@ These operations do not certify semantic correctness or execute examples. See
 
 ### Portable skill workflows
 
-The candidate pack owns nine reusable workflows: routing, foundations, Storybook,
+The pack owns nine reusable workflows: routing, foundations, Storybook,
 component round trips, layout assembly, library component implementation, interactive
 workspace composition, library curation and quality reconciliation. Start with
 [the stack router](skills/stack-orchestrator/SKILL.md) and follow only the workflow
@@ -256,5 +259,6 @@ Library-specific API guidance is reviewed, generated project output, not a stati
 supported-package catalog. AI Elements can be an explicitly configured source just
 like a different component library; the shared pack does not embed one consumer's
 API imports, registry installation commands or editor choice. Installed core and
-custom output have separate integrity gates. These candidate workflows still require
-the final published release and consumer cutover; public v0.4.0 is unchanged.
+custom output have separate integrity gates. Product installation does not establish
+consumer readiness, live publication, or repository landing: each requires its own
+evidence and applicable review/CI gates. Historical v0.4.0 is unchanged.

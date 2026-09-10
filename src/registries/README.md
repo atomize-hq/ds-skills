@@ -1,8 +1,8 @@
-# Registry snapshot acquisition (candidate commands)
+# Registry snapshot acquisition
 
 `registries capture/check/diff` are separate from package installation and semantic
 curation. They replace fixed registry URLs, style names, component lists and local
-split maps with project data. These commands are not in public v0.4.0.
+split maps with project data. These commands require version 0.5.0 or later; v0.4.0 does not provide them.
 
 ## Configure explicit sources
 

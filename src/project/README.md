@@ -5,12 +5,18 @@ plugins. The default project root is the config's directory; `--root` selects an
 explicit root when configuration is nested. Product release identity and pins
 are a separate installation contract.
 
-The currently implemented capability is `tokens`. Setting it to `null` explicitly
-disables it; token commands then return cannot-evaluate, not a passing empty run.
-Unknown fields, omitted capability selection, unsupported source formats, path
-escapes and existing symlinks outside the project root are rejected. Additional
-capabilities will be added during extraction; this is not yet the full planned
-library/Storybook/project configuration surface.
+The root contract supports `tokens`, `storybook`, `components`, `sourceChecks`,
+`foundations`, `libraries`, `registries`, and `curation`. `tokens` must be configured
+or explicitly `null`; token commands return cannot-evaluate when disabled, not a
+passing empty run. The other capabilities are optional and validated when configured.
+Unknown fields, omitted token capability selection, unsupported source formats, path
+escapes and existing symlinks outside the project root are rejected.
+
+See the [token compiler](../tokens/README.md), [Storybook policy](../storybook/README.md),
+[component contracts](../components/README.md), [source checks](../source-checks/README.md),
+[foundations](../foundations/README.md), [library evidence](../libraries/README.md),
+[registry snapshots](../registries/README.md), and [curation](../curation/README.md)
+for each capability. The example below enables only tokens.
 
 ```json
 {
