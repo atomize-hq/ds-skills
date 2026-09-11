@@ -52,6 +52,7 @@ for flavour in alpha beta; do
   cp "$work/release/ds-skills.release.json" "$work/consumer-$flavour/ds-skills.release.json"
   "$cli" project setup --root "$work/consumer-$flavour" --prefix "$work/prefix" >/dev/null
   DS_SKILLS_PREFIX="$work/prefix" node "$work/consumer-$flavour/.ds-skills/project.mjs" --check >/dev/null
+  DS_SKILLS_PREFIX="$work/prefix" node "$root/scripts/checks/documented-commands.mjs" "$work/consumer-$flavour" "$installed" "$root"
   node "$root/scripts/checks/storybook-policy.mjs" "$work/consumer-$flavour" "$work/prefix" "$flavour"
   node "$root/scripts/checks/chromatic-status.mjs" "$work/consumer-$flavour" "$work/prefix" "$flavour"
   node "$root/scripts/checks/components.mjs" "$work/consumer-$flavour" "$work/prefix" "$flavour"

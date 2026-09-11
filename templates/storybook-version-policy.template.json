@@ -22,13 +22,13 @@
   ],
   "configFiles": [".storybook/main.ts", ".storybook/preview.ts"],
   "validationCommands": [
-    "node .agents/skills/scripts/validate-artifact.mjs .agents/skills/schemas/storybook-version-policy.schema.json .storybook/storybook-version-policy.json",
-    "node .agents/skills/scripts/validate-artifact.mjs .agents/skills/schemas/storybook-tier-policy.schema.json storybook/component-tier-policy.json",
-    "node .agents/skills/scripts/validate-artifact.mjs .agents/skills/schemas/storybook-story-inventory.schema.json storybook/story-inventory.json"
+    "node .ds-skills/project.mjs validate storybook-version-policy .storybook/storybook-version-policy.json",
+    "node .ds-skills/project.mjs validate storybook-tier-policy storybook/component-tier-policy.json",
+    "node .ds-skills/project.mjs validate storybook-story-inventory storybook/story-inventory.json"
   ],
   "notes": [
     "Keep all Storybook packages on the same exact release line.",
     "Review and intentionally update this file on every Storybook upgrade.",
-    "validationCommands starts on the skill pack's generic validator because that is what a repo has on day one. Once the repo owns semantic validators with cross-field and referential checks, replace these entries with those commands — the pack validator only checks shape."
+    "validationCommands use the generated project launcher and shipped schema names, so they never depend on an internal installed path. They are shape checks. Where configured, this product also ships semantic storybook-policy plus ledger/proof commands; consumer-specific application validators are additional rather than replacements for those product contracts."
   ]
 }

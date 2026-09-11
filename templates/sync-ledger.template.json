@@ -1,5 +1,5 @@
 {
-  "ledgerVersion": "2",
+  "ledgerVersion": "3",
   "artifact": {
     "path": "design-tokens/dist/figma/tokens.json",
     "revision": "0000000000000000000000000000000000000000"
