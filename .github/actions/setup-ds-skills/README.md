@@ -1,7 +1,9 @@
 # Set up pinned ds-skills
 
-Candidate composite action; do not use a moving branch as your production setup
-authority. Pin the action to a reviewed product commit, separately from the reviewed
+The action source shipped with public `v0.5.3` is package-tested against an isolated staged
+release. Use an immutable reviewed full commit, not a moving branch, as production setup
+authority. This source's `0.5.4` package version is a release candidate until a matching tag and
+assets are published; do not claim GitHub runner proof from local package tests. Pin the action to a reviewed product commit, separately from the reviewed
 `ds-skills.release.json` in the project. The action revision provides acquisition
 and verification code; the project pin chooses the immutable runtime and skills.
 

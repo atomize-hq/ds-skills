@@ -15,6 +15,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
  * one gives you for free: an unsupported keyword must be *rejected*, never
  * silently ignored, or a schema constraint quietly stops being enforced.
  */
+const packageRoot = fileURLToPath(new URL("../../", import.meta.url));
 const scriptPath = fileURLToPath(new URL("./artifact.mjs", import.meta.url));
 const schemaDir = fileURLToPath(new URL("../../schemas/", import.meta.url));
 const profilePath = fileURLToPath(
@@ -154,6 +155,23 @@ describe("validate-artifact CLI", () => {
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("Usage:");
+  });
+});
+
+describe("the shipped v3 ledger starter", () => {
+  it("passes the shipped sync-ledger schema without inventing publication", () => {
+    const starter = path.join(
+      packageRoot,
+      "templates",
+      "sync-ledger.template.json",
+    );
+    const result = run("sync-ledger", starter);
+
+    expect(result.status, result.stderr).toBe(0);
+    const ledger = JSON.parse(fs.readFileSync(starter, "utf8"));
+    expect(ledger.ledgerVersion).toBe("3");
+    expect(ledger.verification.materializationStatus).toBe("not-run");
+    expect(ledger).not.toHaveProperty("publication");
   });
 });
 

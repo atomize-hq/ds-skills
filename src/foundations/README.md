@@ -79,6 +79,19 @@ the bundled renderer, rather than trusting a stored successful receipt.
 Exit 0 means generation/check conformance; exit 1 means evaluated invalid data or
 missing/stale output; exit 2 means inability to evaluate (missing input/installation,
 unsafe paths or concurrent changes); unexpected runtime errors remain exit 3.
+
+## Execution boundary
+
+The supported product boundary stops at generating and checking the script. A consumer may
+manually import/evaluate that generated script only in its authorized development-plugin or
+compatible Figma execution context, with the configured owner/page/collection already present.
+The script's replacement ownership uses plugin data, so evaluating it from a different context can
+refuse rather than safely replacing prior output. There is no `foundations run` token-plugin action,
+no general evaluator installed by this package, and no automatic production migration.
+
+An isolated historical proof can demonstrate that a particular dated script/context ran; it is not
+proof of a production Foundations migration, library publication, or current live Figma state.
+Keep those claims and authorization separate from `foundations build/check` results.
 JSON scope is `foundation-script-generation`. No CLI command automatically evaluates
 consumer text or mutates Figma. Inspect the script and run it through the supported
 Figma evaluation workflow in an isolated destination first; it returns a Promise

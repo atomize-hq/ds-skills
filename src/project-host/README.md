@@ -6,20 +6,41 @@ this interface.
 
 ## Setup and execution
 
-From a trusted, already installed product, provision the reviewed release and
-then set up its project entry point:
+Start only after the Unix or PowerShell bootstrap in the root [release guide](../../README.md)
+has acquired the record, passed its human/source review gate, verified the bootstrap digest, and
+installed the exact asset. Export one selected `DS_SKILLS_PREFIX` for the whole journey; otherwise
+the generated launcher falls back to a platform default and can no longer find the reviewed install.
+Set `TRUSTED_DS_SKILLS` to that installed `<prefix>/<release>/bin/ds-skills` (or
+`bin\ds-skills.cmd` on Windows), never to a bare command on `PATH`.
 
 ```sh
-"$TRUSTED_DS_SKILLS" release install --record /project/ds-skills.release.json
-"$TRUSTED_DS_SKILLS" project setup --root /project
-"$TRUSTED_DS_SKILLS" project check --root /project --json
+export DS_SKILLS_PREFIX=/project/.tools/ds-skills
+"$TRUSTED_DS_SKILLS" release verify --record /project/ds-skills.release.json \
+  --prefix "$DS_SKILLS_PREFIX" --json
+"$TRUSTED_DS_SKILLS" project setup --root /project --prefix "$DS_SKILLS_PREFIX"
+"$TRUSTED_DS_SKILLS" project check --root /project --prefix "$DS_SKILLS_PREFIX" --json
+node /project/.ds-skills/project.mjs --check
 ```
 
-`--prefix <directory>` selects the installation location for these commands;
-otherwise `DS_SKILLS_PREFIX` or the platform default applies. The pin selects the
-release, never PATH, an npm registry, a global current pointer, or the working
-directory. Initial acquisition of the trusted product still follows the bootstrap
-digest verification procedure in the release guide.
+`release install` is the explicit acquisition/repair operation after bootstrap;
+`project setup` does not fetch a release. `--prefix <directory>` selects the
+installation location; otherwise `DS_SKILLS_PREFIX` or the platform default applies.
+The pin selects the release, never PATH, an npm registry, a global current pointer,
+or the working directory. Core setup installs launcher/discovery/schema/template
+outputs only. Consumer-specific curation is a second reviewed lifecycle:
+
+```sh
+node /project/.ds-skills/project.mjs curation check --config ds-skills.project.json
+node /project/.ds-skills/project.mjs curation install --config ds-skills.project.json
+node /project/.ds-skills/project.mjs curation installed check --config ds-skills.project.json
+```
+
+Do not treat a green core `project check` as a custom-curation check. For every release
+upgrade, review the new pin, use that new pin's bootstrap/exact executable, and rerun setup,
+`curation install`, and `curation installed check`: the receipt binds the product pin even if the
+curated bundle is byte-identical. Semantic re-curation/review is conditional on changed curation
+inputs or accepted content. Edited or unowned managed files are a refusal, not a request to delete
+roots: restore expected bytes or move the user-owned content before retrying.
 
 Setup copies the exact sealed bundle into `.ds-skills/project.mjs` and writes
 `.ds-skills/installation.json`. The receipt records its version, release/source
@@ -142,8 +163,8 @@ skill roots or shared discovery parents. A partial update can be retried when it
 new files are exact desired bytes. The earlier unpublished version-1 receipt can
 be upgraded, but grants ownership only of its launcher, never pre-existing skills.
 
-[Product-owned CI setup](../../.github/actions/setup-ds-skills/README.md) shares the
-explicit provisioning API with `--install`; no second consumer acquisition helper
-is needed. Consumer caller/CI migration, source-grounded curation and final
+[Product-owned CI setup](https://github.com/atomize-hq/ds-skills/blob/v0.5.4/.github/actions/setup-ds-skills/README.md)
+shares the explicit provisioning API with `--install`; no second consumer acquisition helper is
+needed. Consumer caller/CI migration, source-grounded curation and final
 release/pin updates remain required. A successful core installation check does not
 claim that those later integrations have been completed.

@@ -112,6 +112,21 @@ describe("the embedded URL and the served endpoint cannot drift apart", () => {
   });
 });
 
+describe("recording guidance and server behavior", () => {
+  it("keeps an in-panel result independent from an explicit report destination", () => {
+    const config = resolveConfig(
+      JSON.parse(fs.readFileSync(writeConfig(), "utf8")) as object,
+    );
+    const { uiHtml } = renderPluginSources(config);
+
+    expect(uiHtml).toContain(
+      "node .ds-skills/project.mjs figma serve --config <config> --artifact <artifact> --drift-out <report>",
+    );
+    expect(uiHtml).toContain("panel result is unchanged");
+    expect(uiHtml).not.toContain("pnpm figma:tokens:serve");
+  });
+});
+
 describe("drift reports", () => {
   it("writes a report, stamped with provenance the client did not supply", async () => {
     const configPath = writeConfig();

@@ -110,7 +110,7 @@ The client explicitly uses API version `2022-11-28`.
 
 ## Remaining extraction
 
-[Provider publication](publish-README.md) is now implemented separately. Promotion/status
-aggregation, consumer caller migration and live CI evidence remain. These status commands
+[Provider publication](publish-README.md) and component promotion/status aggregation are
+implemented separately. Consumer caller migration and live CI evidence remain. These status commands
 do not stand in for that work. Keep existing consumer callers until their replacements
 are verified, then remove duplicated consumer-owned implementations and reusable tests.

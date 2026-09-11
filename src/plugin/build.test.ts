@@ -191,6 +191,21 @@ describe("the generated endpoint, together with the permission that gates it", (
   });
 });
 
+describe("generated help preserves the portable operation boundary", () => {
+  it("names recording setup and Sync's destructive reconciliation limits", () => {
+    const { uiHtml } = renderPluginSources(configWith({}));
+
+    expect(uiHtml).toMatch(/first matching\s+collection name/);
+    expect(uiHtml).toMatch(/type\s+changes/);
+    expect(uiHtml).toMatch(/transaction-wide\s+rollback/);
+    expect(uiHtml).toContain(
+      "node .ds-skills/project.mjs figma serve --config <config> --artifact <artifact> --drift-out <report>",
+    );
+    expect(uiHtml).toContain("panel result is unchanged");
+    expect(uiHtml).not.toContain("pnpm figma:tokens:serve");
+  });
+});
+
 describe("buildPlugin writes what Figma loads", () => {
   it("writes ui.html and manifest.json, and returns the same bytes", () => {
     const outDir = path.join(tmpDir, "out");

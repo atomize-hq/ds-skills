@@ -136,8 +136,13 @@
 
       <div class="hint">
         <strong>Sync</strong> writes the artifact into this file&rsquo;s
-        variables. <strong>Check Drift</strong> is read-only: it reports where
-        this file disagrees with the artifact. Tokens are authored in
+        variables. Use a complete authoritative artifact and a collection
+        exclusively owned by this rail: Sync chooses the first matching
+        collection name, deletes variables absent from the artifact, and
+        recreates type changes. Renames lose identity; partial failures have no
+        transaction-wide rollback. Verify in an isolated destination first.
+        <strong>Check Drift</strong> is read-only: it reports where this file
+        disagrees with the artifact. Tokens are authored in
         <code>__RAIL_TOKEN_SOURCE_PATH__</code> only &mdash; fix drift there,
         rebuild, then sync.
       </div>
@@ -165,8 +170,8 @@
         parent.postMessage({ pluginMessage: message }, "*");
       }
 
-      // Best-effort: the in-panel report is the primary output, and recording it
-      // as a repo artifact is a bonus that needs `pnpm figma:tokens:serve`.
+      // Best-effort: the in-panel result is primary. Recording needs the portable
+      // verified launcher command with an explicit --drift-out destination.
       async function recordDriftReport(json) {
         try {
           const res = await fetch(driftReportUrl, {
@@ -179,7 +184,7 @@
             ? `recorded → ${body.written}`
             : "not recorded (server error)";
         } catch {
-          return "not recorded (start pnpm figma:tokens:serve)";
+          return "not recorded (run node .ds-skills/project.mjs figma serve --config <config> --artifact <artifact> --drift-out <report>; panel result is unchanged)";
         }
       }
 
