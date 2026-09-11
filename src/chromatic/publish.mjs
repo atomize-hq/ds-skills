@@ -34,6 +34,9 @@ export function publicationOptions(config, { branchName, token, scratch }) {
     exitOnceUploaded: false,
     autoAcceptChanges: false,
     onlyChanged: false,
+    // A same-SHA retry must compare against the now-reviewed baseline, not
+    // reuse an accepted build with its historical nonzero change count.
+    forceRebuild: true,
     uploadMetadata: false,
   };
 }

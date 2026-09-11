@@ -122,6 +122,7 @@ it("pins provider options and cleans isolated logs/config after success", async 
       exitOnceUploaded: false,
       autoAcceptChanges: false,
       onlyChanged: false,
+      forceRebuild: true,
       exitZeroOnChanges: true,
     });
     expect(JSON.parse(fs.readFileSync(input.options.configFile))).toEqual({});
@@ -129,6 +130,23 @@ it("pins provider options and cleans isolated logs/config after success", async 
     return published;
   });
   expect(fs.existsSync(scratch)).toBe(false);
+});
+it("requests a fresh provider build on repeated publication of the same SHA", async () => {
+  const f = fixture();
+  const revisions = [];
+  const provider = async (input) => {
+    expect(input.options.forceRebuild).toBe(true);
+    expect(input.options.skip).toBe(false);
+    expect(input.options.autoAcceptChanges).toBe(false);
+    expect(input.options.onlyChanged).toBe(false);
+    revisions.push(input.gitSha);
+    return published;
+  };
+  await run(f, provider);
+  await run(f, provider);
+  expect(revisions).toHaveLength(2);
+  expect(revisions[0]).toMatch(/^[a-f0-9]{40}$/);
+  expect(revisions[1]).toBe(revisions[0]);
 });
 it("missing token is unavailable and never reports a local success", async () => {
   const f = fixture();
